@@ -27,7 +27,7 @@ To preserve order - only administrators are allowed to create tags and ingredien
 ### To deploy this project need the next actions:
 - Download project with SSH (actually you only need the folder 'infra/')
 ```
-git@github.com:Xewus/foodgram-project-react.git
+git clone git@github.com:Xewus/foodgram-project-react.git
 ```
 - Connect to your server:
 ```
