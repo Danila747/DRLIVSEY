@@ -11,6 +11,7 @@ from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.routers import APIRootView
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
@@ -24,6 +25,11 @@ from .serializers import (IngredientSerializer, RecipeSerializer,
 from .services import incorrect_layout
 
 User = get_user_model()
+
+
+class BaseAPIRootView(APIRootView):
+    """Базовые пути API приложения.
+    """
 
 
 class UserViewSet(DjoserUserViewSet, AddDelViewMixin):

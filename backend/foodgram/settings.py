@@ -71,13 +71,13 @@ DATABASES = {
         'ENGINE': config(
             'DB_ENGINE', default='django.db.backends.postgresql'),
         'NAME': config(
-            'DB_NAME', default='postgres'),
+            'DB_NAME', default='foodgram'),
         'USER': config(
-            'POSTGRES_USER', default='postgres'),
+            'POSTGRES_USER', default='foodgram_user'),
         'PASSWORD': config(
             'POSTGRES_PASSWORD', default='password'),
         'HOST': config(
-            'DB_HOST', default='db'),
+            'DB_HOST', default='127.0.0.1'),
         'PORT': config(
             'DB_PORT', default=5432, cast=int)
     }
@@ -126,15 +126,16 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / STATIC_URL
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
+
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / MEDIA_URL
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-PASSWORD_RESET_TIMEOUT = 60 * 60
+PASSWORD_RESET_TIMEOUT = 60 * 60  # 1 hour
 
 # for review
 if REVIEW:
