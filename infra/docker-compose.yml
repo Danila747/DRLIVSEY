@@ -4,10 +4,7 @@ services:
 
   frontend:
     container_name: front
-    # image: xewus/foodgram_front:latest
-    build: ../frontend
-    # build:
-    #   context: https://github.com/yandex-praktikum/foodgram-project-react/tree/master/frontend
+    image: xewus/foodgram_front:latest
     volumes:
       - ./frontend/:/app/result_build/
 
@@ -22,8 +19,7 @@ services:
 
   backend:
     container_name: back
-    # image: xewus/foodgram_back:latest
-    build: ../backend
+    image: xewus/foodgram_back:latest
     restart: always
     command: >
       bash -c "python manage.py migrate &&
