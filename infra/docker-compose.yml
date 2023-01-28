@@ -3,11 +3,16 @@ version: '3.3'
 services:
 
   frontend:
-    image: xewus/foodgram_front:latest
+    container_name: front
+    # image: xewus/foodgram_front:latest
+    build: ../frontend
+    # build:
+    #   context: https://github.com/yandex-praktikum/foodgram-project-react/tree/master/frontend
     volumes:
       - ./frontend/:/app/result_build/
 
   db:
+    container_name: db
     image: postgres:13.0-alpine
     restart: always
     volumes:
@@ -16,35 +21,47 @@ services:
       - ./.env
 
   backend:
-    image: xewus/foodgram_back:latest
+    container_name: back
+    # image: xewus/foodgram_back:latest
+    build: ../backend
     restart: always
     command: >
       bash -c "python manage.py migrate &&
       python manage.py collectstatic --noinput &&
       gunicorn --bind 0:8000 foodgram.wsgi"
     volumes:
-      - static_value:/app/static/
-      - media_value:/app/media/
+      - static_dir:/app/static/
+      - media_dir:/app/media/
+      - docs:/app/docs/
     depends_on:
       - db
     env_file:
       - ./.env
 
   nginx:
-    image: nginx:1.19.3
+    container_name: proxy
+    image: nginx:1.23.3-alpine
     restart: always
     ports:
-      - 8001:80
+      - 80:80
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./frontend/build:/usr/share/nginx/html/
-      - static_value:/var/html/static/
-      - media_value:/var/html/media/
+      - static_dir:/etc/nginx/html/static/
+      - media_dir:/etc/nginx/html/media/
+      - docs:/etc/nginx/html/docs/
     depends_on:
       - backend
+      - frontend
 
 volumes:
-  static_value:
-  media_value:
+  static_dir:
+  media_dir:
   postgres_data:
+  docs:
+
+networks:
+  network1:
+    name: foodgram_net
+    external: true
 ...
