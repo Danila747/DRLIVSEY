@@ -61,8 +61,8 @@ touch .env
 ```
 DEBUG=False
 SECRET_KEY=<Your_some_long_string>
-ALLOWED_HOSTS=localhost, 127.0.0.1, <Your_host>
-CSRF_TRUSTED_ORIGINS=http://localhost, http://127.0.0.1, https://<Your_host>
+ALLOWED_HOSTS=<Your_host>
+CSRF_TRUSTED_ORIGINS=https://<Your_host>
 DB_ENGINE='django.db.backends.postgresql'
 DB_NAME='postgres'
 POSTGRES_USER='postgres'
