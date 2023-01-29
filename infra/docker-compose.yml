@@ -19,8 +19,8 @@ services:
 
   backend:
     container_name: app
-    image: xewus/foodgram_back:latest
-    # build: ../backend
+    # image: xewus/foodgram_back:latest
+    build: ../backend
     restart: always
     command: >
       bash -c "python manage.py migrate &&
