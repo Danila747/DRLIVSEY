@@ -19,8 +19,8 @@ services:
 
   backend:
     container_name: app
-    # image: xewus/foodgram_back:latest
-    build: ../backend
+    image: xewus/foodgram_back:latest
+    # build: ../backend
     restart: always
     command: >
       bash -c "python manage.py migrate &&
@@ -44,9 +44,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./frontend/build:/usr/share/nginx/html/
+      - docs:/usr/share/nginx/html/docs/
       - static_dir:/etc/nginx/html/static/
       - media_dir:/etc/nginx/html/media/
-      - docs:/etc/nginx/html/docs/
     depends_on:
       - backend
       - frontend
