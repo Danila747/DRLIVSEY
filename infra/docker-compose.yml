@@ -21,8 +21,8 @@ services:
 
   backend:
     container_name: app
-    # image: xewus/foodgram_back:latest
-    build: ../backend
+    image: xewus/foodgram_back:latest
+    # build: ../backend
     restart: always
     ports:
       - 8000:8000
