@@ -90,7 +90,7 @@ Upload it to the database with the following command
 ### (this will also add a superuser with username - "qqq", password - "q", email - "q@q.qq
 ## DON'T FORGET TO CHANGE PASSWORD !!!):
 ```
-sudo docker exec -it foodgram_backend_1 python manage.py loaddata data/dump.json
+sudo docker exec -it app python manage.py loaddata data/dump.json
 ```
 
 ### *Backend by:*
