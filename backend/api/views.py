@@ -18,7 +18,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from . import conf
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
-from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
+from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly, DjangoModelPermissions
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)
@@ -42,6 +42,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
     """
     pagination_class = PageLimitPagination
     add_serializer = UserSubscribeSerializer
+    permission_classes = (DjangoModelPermissions,)
 
     @action(methods=conf.ACTION_METHODS, detail=True)
     def subscribe(self, request, id):

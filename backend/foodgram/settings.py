@@ -15,7 +15,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost http://127.0.0.1',
+    default='http://localhost, http://127.0.0.1',
     cast=Csv()
 )
 
