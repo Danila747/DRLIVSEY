@@ -128,8 +128,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
             else:
                 name = name.translate(incorrect_layout)
             name = name.lower()
-            stw_queryset = list(queryset.filter(name__startswith=name))
-            cnt_queryset = queryset.filter(name__contains=name)
+            stw_queryset = list(queryset.filter(name__istartswith=name))
+            cnt_queryset = queryset.filter(name__icontains=name)
             stw_queryset.extend(
                 [i for i in cnt_queryset if i not in stw_queryset]
             )
