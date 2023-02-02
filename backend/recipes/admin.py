@@ -46,7 +46,7 @@ class RecipeAdmin(ModelAdmin):
     )
     raw_id_fields = ('author', )
     search_fields = (
-        'name', 'author',
+        'name', 'author__username', 'tags_name',
     )
     list_filter = (
         'name', 'author__username',
