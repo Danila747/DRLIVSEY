@@ -89,7 +89,7 @@ Oh, I'm sorry. You also need to create the first account for the admin panel usi
 sudo docker exec -it app python manage.py createsuperuser
 ```
 
-and if you want, you can use the list of ingredients offered by us to write
+And if you want, you can use the list of ingredients offered by us to write
 recipes.
 Upload it to the database with the following command:
 ```
