@@ -1,6 +1,5 @@
 """Модуль вспомогательных функций.
 """
-
 from string import hexdigits
 
 from recipes.models import AmountIngredient

@@ -4,14 +4,13 @@
 приложения `Foodgram`. Модель пользователя основана на модели
 AbstractUser из Django для переопределения полей обязательных для заполнения.
 """
-from api import conf
+from core import conf
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (BooleanField, CharField, CheckConstraint,
                               EmailField, ManyToManyField, Q)
 from django.db.models.functions import Length
 from django.utils.translation import gettext_lazy as _
-
-from .validators import MinLenValidator, OneOfTwoValidator
+from users.validators import MinLenValidator, OneOfTwoValidator
 
 CharField.register_lookup(Length)
 

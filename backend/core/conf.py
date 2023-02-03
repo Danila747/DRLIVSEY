@@ -23,7 +23,7 @@ DEL_METHODS = ('DELETE',)
 
 # HTTP методы для @action разрешающие вход
 # в функцию удаления и добавления объетов
-ACTION_METHODS = [s.lower() for s in (ADD_METHODS + DEL_METHODS)]
+ACTION_METHODS = tuple(s.lower() for s in (ADD_METHODS + DEL_METHODS))
 
 # HTTP методы разрешённые для изменения объектов
 UPDATE_METHODS = ('PUT', 'PATCH')
@@ -53,17 +53,6 @@ SYMBOL_TRUE_SEARCH = ('1', 'true',)
 # Поиск объектов не содержащих переданный параметр.
 # Например только не избранное: `is_favorited=0`
 SYMBOL_FALSE_SEARCH = ('0', 'false',)
-
-"""
-Литералы для выбора менеджера Мany-To-Many
-в эндпоинтах обеспечивающих работу с этими менеджерами.
-"""
-# # Создание "подписки". <user.subscribe>
-# SUBSCRIBE_M2M = 'subscribe'
-# # Добавление рецепта в "избранное". <user.favorites>
-# FAVORITE_M2M = 'favorite'
-# # Добавление рецепта в "список покупок". <user.carts>
-# SHOP_CART_M2M = 'shopping_cart'
 
 """
 Настройки ограничений моделей.
@@ -99,3 +88,6 @@ USERS_HELP_UNAME = (
 USERS_HELP_FNAME = (
     f'Обязательно для заполнения.Максимум {MAX_LEN_USERS_CHARFIELD} букв.'
 )
+
+# Размер сохраняемого изображения рецепта
+RECIPE_IMAGE_SIZE = (700, 500)

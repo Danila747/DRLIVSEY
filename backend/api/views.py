@@ -1,6 +1,16 @@
 from datetime import datetime as dt
 from urllib.parse import unquote
 
+# from backend.
+from api.mixins import AddDelViewMixin
+from api.paginators import PageLimitPagination
+from api.permissions import (AdminOrReadOnly, AuthorStaffOrReadOnly,
+                             DjangoModelPermissions, IsAuthenticated)
+from api.serializers import (IngredientSerializer, RecipeSerializer,
+                             ShortRecipeSerializer, TagSerializer,
+                             UserSubscribeSerializer)
+from core import conf
+from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http.response import HttpResponse
@@ -14,16 +24,6 @@ from rest_framework.routers import APIRootView
 from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
                                    HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
-from . import conf
-from .mixins import AddDelViewMixin
-from .paginators import PageLimitPagination
-from .permissions import (AdminOrReadOnly, AuthorStaffOrReadOnly,
-                          DjangoModelPermissions, IsAuthenticated)
-from .serializers import (IngredientSerializer, RecipeSerializer,
-                          ShortRecipeSerializer, TagSerializer,
-                          UserSubscribeSerializer)
-from .services import incorrect_layout
 
 User = get_user_model()
 

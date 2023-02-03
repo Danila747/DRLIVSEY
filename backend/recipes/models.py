@@ -17,7 +17,8 @@ Models:
     Cart:
         Рецепты в корзине покупок пользователя.
 """
-from api.conf import MAX_LEN_RECIPES_CHARFIELD, MAX_LEN_RECIPES_TEXTFIELD
+from core.conf import (MAX_LEN_RECIPES_CHARFIELD, MAX_LEN_RECIPES_TEXTFIELD,
+                       RECIPE_IMAGE_SIZE)
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import (CASCADE, CharField, CheckConstraint,
@@ -31,7 +32,6 @@ from PIL import Image
 CharField.register_lookup(Length)
 
 User = get_user_model()
-IMAGE_SIZE = (500, 500)
 
 
 class Tag(Model):
@@ -238,7 +238,7 @@ class Recipe(Model):
         self.name = self.name.capitalize()
         super().save(*args, **kwargs)
         image = Image.open(self.image.path)
-        image = image.resize(IMAGE_SIZE)
+        image = image.resize(RECIPE_IMAGE_SIZE)
         image.save(self.image.path)
 
 
