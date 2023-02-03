@@ -7,8 +7,8 @@ AbstractUser из Django для переопределения полей обя
 from api import conf
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (CharField, CheckConstraint, EmailField,
-                              ManyToManyField, Q)
+from django.db.models import (BooleanField, CharField, CheckConstraint,
+                              EmailField, ManyToManyField, Q)
 from django.db.models.functions import Length
 from django.utils.translation import gettext_lazy as _
 
@@ -25,7 +25,7 @@ class MyUser(AbstractUser):
     Attributes:
         email(str):
             Адрес email пользователя.
-            Проверка формата производится внутри Dlango.
+            Проверка формата производится внутри Django.
             Установлено ограничение по максимальной длине.
         username(str):
             Юзернейм пользователя.
@@ -43,10 +43,11 @@ class MyUser(AbstractUser):
             `соли` settings.SECRET_KEY.
             Хранится в зашифрованном виде.
             Установлено ограничение по максимальной длине.
+        active (bool):
+            Активен или заблокирован пользователь.
         subscribe(int):
             Ссылки на id связанных пользователей.
     """
-
     email = EmailField(
         verbose_name='Адрес электронной почты',
         max_length=conf.MAX_LEN_EMAIL_FIELD,
@@ -77,6 +78,10 @@ class MyUser(AbstractUser):
         verbose_name=_('Пароль'),
         max_length=conf.MAX_LEN_USERS_CHARFIELD,
         help_text=conf.USERS_HELP_FNAME
+    )
+    active = BooleanField(
+        verbose_name=' Активирован',
+        default=True
     )
     subscribe = ManyToManyField(
         verbose_name='Подписка',

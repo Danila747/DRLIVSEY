@@ -1,7 +1,8 @@
 from django.contrib.admin import ModelAdmin, TabularInline, register, site
 from django.utils.safestring import mark_safe
 
-from .models import AmountIngredient, Ingredient, Recipe, Tag
+from recipes.models import (AmountIngredient, Cart, Favorite, Ingredient,
+                            Recipe, Tag)
 
 site.site_header = 'Администрирование Foodgram'
 EMPTY_VALUE_DISPLAY = 'Значение не указано'
@@ -36,7 +37,7 @@ class IngredientAdmin(ModelAdmin):
 @register(Recipe)
 class RecipeAdmin(ModelAdmin):
     list_display = (
-        'name', 'author', 'get_image',
+        'name', 'author', 'get_image', 'count_favorites',
     )
     fields = (
         ('name', 'cooking_time',),
@@ -46,10 +47,10 @@ class RecipeAdmin(ModelAdmin):
     )
     raw_id_fields = ('author', )
     search_fields = (
-        'name', 'author__username', 'tags_name',
+        'name', 'author__username', 'tags__name',
     )
     list_filter = (
-        'name', 'author__username',
+        'name', 'author__username', 'tags__name'
     )
 
     inlines = (IngredientInline,)
@@ -60,6 +61,11 @@ class RecipeAdmin(ModelAdmin):
         return mark_safe(f'<img src={obj.image.url} width="80" hieght="30"')
 
     get_image.short_description = 'Изображение'
+
+    def count_favorites(self, obj):
+        return obj.favorite.count()
+    
+    count_favorites.short_description = 'В избранном'
 
 
 @register(Tag)
@@ -73,3 +79,35 @@ class TagAdmin(ModelAdmin):
 
     save_on_top = True
     empty_value_display = EMPTY_VALUE_DISPLAY
+
+
+@register(Favorite)
+class FavoriteAdmin(ModelAdmin):
+    list_display = (
+        'user', 'recipe', 'date_added'
+    )
+    search_fields = (
+        'user__username', 'recipe__name'
+    )
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@register(Cart)
+class CardAdmin(ModelAdmin):
+    list_display = (
+        'user', 'recipe', 'date_added'
+    )
+    search_fields = (
+        'user__username', 'recipe__name'
+    )
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

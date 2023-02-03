@@ -12,6 +12,10 @@ Models:
     AmountIngredient:
         Модель для связи Ingredient и Recipe.
         Также указывает количество ингридиента.
+    Favorite:
+        Указывает избранные пользователем рецепты.
+    Cart:
+        Рецепты в корзине покупок пользователя.
 """
 from api.conf import MAX_LEN_RECIPES_CHARFIELD, MAX_LEN_RECIPES_TEXTFIELD
 
@@ -175,11 +179,6 @@ class Recipe(Model):
         to=User,
         on_delete=CASCADE,
     )
-    favorite = ManyToManyField(
-        verbose_name='Понравившиеся рецепты',
-        related_name='favorites',
-        to=User,
-    )
     tags = ManyToManyField(
         verbose_name='Тег',
         related_name='recipes',
@@ -190,11 +189,6 @@ class Recipe(Model):
         related_name='recipes',
         to=Ingredient,
         through='recipes.AmountIngredient',
-    )
-    cart = ManyToManyField(
-        verbose_name='Список покупок',
-        related_name='carts',
-        to=User,
     )
     pub_date = DateTimeField(
         verbose_name='Дата публикации',
@@ -294,3 +288,93 @@ class AmountIngredient(Model):
 
     def __str__(self) -> str:
         return f'{self.amount} {self.ingredients}'
+
+
+class Favorite(Model):
+    """Избранные рецепты.
+
+    Модель связывает Recipe и  User.
+
+    Attributes:
+        recipe(int):
+            Связаный рецепт. Связь через ForeignKey.
+        user(int):
+            Связаный пользователь. Связь через ForeignKey.
+        date_added (datetime):
+            Дата длбавления рецепта в избранное. 
+    """
+    recipe = ForeignKey(
+        verbose_name='Понравившиеся рецепты',
+        related_name='favorite',
+        to=Recipe,
+        on_delete=CASCADE,
+    )
+    user = ForeignKey(
+        verbose_name='Пользователь',
+        related_name='favorites',
+        to=User,
+        on_delete=CASCADE,
+    )
+    date_added = DateTimeField(
+        verbose_name='Дата добавления',
+        auto_now_add=True,
+        editable=False
+    )
+
+    class Meta:
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+        constraints = (
+            UniqueConstraint(
+                fields=('recipe', 'user', ),
+                name='\n%(app_label)s_%(class)s recipe is favorite alredy\n',
+            ),
+        )
+
+    def __str__(self) -> str:
+        return f'{self.user} -> {self.recipe}'
+
+
+class Cart(Model):
+    """Рецепты в корзине покупок.
+
+    Модель связывает Recipe и  User.
+
+    Attributes:
+        recipe(int):
+            Связаный рецепт. Связь через ForeignKey.
+        user(int):
+            Связаный пользователь. Связь через ForeignKey.
+        date_added (datetime):
+            Дата длбавления рецепта в корзину. 
+    """
+    recipe = ForeignKey(
+        verbose_name='Рецепты в списке покупок',
+        related_name='cart',
+        to=Recipe,
+        on_delete=CASCADE,
+    )
+    user = ForeignKey(
+        verbose_name='Владелец списка',
+        related_name='carts',
+        to=User,
+        on_delete=CASCADE,
+    )
+    date_added = DateTimeField(
+        verbose_name='Дата добавления',
+        auto_now_add=True,
+        editable=False
+    )
+
+    class Meta:
+        verbose_name = 'Рецепт в списке покупок'
+        verbose_name_plural = 'Рецепты в списке покупок'
+        constraints = (
+            UniqueConstraint(
+                fields=('recipe', 'user', ),
+                name='\n%(app_label)s_%(class)s recipe is cart alredy\n',
+            ),
+        )
+
+    def __str__(self) -> str:
+        return f'{self.user} -> {self.recipe}'

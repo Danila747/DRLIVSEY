@@ -12,8 +12,6 @@ services:
     container_name: db
     image: postgres:13.0-alpine
     restart: always
-    ports:
-      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
@@ -24,8 +22,6 @@ services:
     image: xewus/foodgram_back:latest
     # build: ../backend
     restart: always
-    ports:
-      - 8000:8000
     command: >
       bash -c "python manage.py migrate &&
       python manage.py collectstatic --noinput &&
@@ -33,7 +29,6 @@ services:
     volumes:
       - static_dir:/app/static/
       - media_dir:/app/media/
-      # - docs:/app/docs/
     depends_on:
       - db
     env_file:

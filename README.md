@@ -84,11 +84,14 @@ Your service is work!
 
 ## Enjoy your meal !
 
-If you need, you can use the list of ingredients offered by us to write
+Oh, I'm sorry. You also need to create the first account for the admin panel using this command:
+```
+sudo docker exec -it app python manage.py createsuperuser
+```
+
+and if you want, you can use the list of ingredients offered by us to write
 recipes.
-Upload it to the database with the following command 
-### (this will also add a superuser with username - "qqq", password - "q", email - "q@q.qq
-## DON'T FORGET TO CHANGE PASSWORD !!!):
+Upload it to the database with the following command:
 ```
 sudo docker exec -it app python manage.py loaddata data/dump.json
 ```

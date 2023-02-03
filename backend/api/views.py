@@ -4,6 +4,7 @@ from urllib.parse import unquote
 from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http.response import HttpResponse
+from django.shortcuts import get_object_or_404
 
 from djoser.views import UserViewSet as DjoserUserViewSet
 
@@ -18,7 +19,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from . import conf
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
-from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly, DjangoModelPermissions
+from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly, IsAuthenticated, DjangoModelPermissions
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)
@@ -44,7 +45,11 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
     add_serializer = UserSubscribeSerializer
     permission_classes = (DjangoModelPermissions,)
 
-    @action(methods=conf.ACTION_METHODS, detail=True)
+    @action(
+        methods=conf.ACTION_METHODS,
+        detail=True,
+        permission_classes=(IsAuthenticated,)
+    )
     def subscribe(self, request, id):
         """Создаёт/удалет связь между пользователями.
 
@@ -59,7 +64,21 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         Returns:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
-        return self.add_del_obj(id, conf.SUBSCRIBE_M2M)
+        user = self.request.user
+        author = get_object_or_404(self.queryset, id=id)
+        serializer = self.add_serializer(
+            author, context={'request': self.request}
+        )
+        subscribe_exist = user.subscribe.filter(id=id).exists()
+
+        if (self.request.method in conf.ADD_METHODS) and not subscribe_exist:
+            user.subscribe.add(author)
+            return Response(serializer.data, status=HTTP_201_CREATED)
+
+        if (self.request.method in conf.DEL_METHODS) and subscribe_exist:
+            user.subscribe.remove(author)
+            return Response(status=HTTP_204_NO_CONTENT)
+        return Response(status=HTTP_400_BAD_REQUEST)
 
     @action(methods=('get',), detail=False)
     def subscriptions(self, request):
@@ -189,7 +208,11 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
 
         return queryset
 
-    @action(methods=conf.ACTION_METHODS, detail=True)
+    @action(
+        methods=conf.ACTION_METHODS,
+        detail=True,
+        permission_classes=(IsAuthenticated,)
+    )
     def favorite(self, request, pk):
         """Добавляет/удалет рецепт в `избранное`.
 
@@ -205,7 +228,11 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         """
         return self.add_del_obj(pk, conf.FAVORITE_M2M)
 
-    @action(methods=conf.ACTION_METHODS, detail=True)
+    @action(
+        methods=conf.ACTION_METHODS,
+        detail=True,
+        permission_classes=(IsAuthenticated,)
+    )
     def shopping_cart(self, request, pk):
         """Добавляет/удалет рецепт в `список покупок`.
 

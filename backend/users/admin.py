@@ -7,9 +7,10 @@ from .models import MyUser
 @register(MyUser)
 class MyUserAdmin(UserAdmin):
     list_display = (
-        'username', 'first_name', 'last_name', 'email',
+        'active', 'username', 'first_name', 'last_name', 'email',
     )
     fields = (
+        ('active', ),
         ('username', 'email', ),
         ('first_name', 'last_name', ),
     )
@@ -19,6 +20,6 @@ class MyUserAdmin(UserAdmin):
         'username', 'email',
     )
     list_filter = (
-        'first_name', 'email',
+        'active', 'first_name', 'email',
     )
     save_on_top = True
