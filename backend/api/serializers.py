@@ -152,7 +152,7 @@ class TagSerializer(ModelSerializer):
         model = Tag
         fields = '__all__'
         read_only_fields = '__all__',
-    
+
     def validate(self, data: dict) -> dict:
         """Проверка вводных данных при создании/редактировании тэга.
 
@@ -185,13 +185,14 @@ class TagSerializer(ModelSerializer):
             elif tag.color == color:
                 err = 'Не уникальный цвет'
             else:
-                 continue
+                continue
             raise ValidationError(err)
 
         data.update({
             'name': name, 'slug': slug, 'color': color
         })
         return data
+
 
 class IngredientSerializer(ModelSerializer):
     """Сериализатор для вывода ингридиентов.

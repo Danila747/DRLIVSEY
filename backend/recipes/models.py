@@ -26,7 +26,6 @@ from django.db.models import (CASCADE, CharField, CheckConstraint,
                               PositiveSmallIntegerField, Q, TextField,
                               UniqueConstraint)
 from django.db.models.functions import Length
-
 from PIL import Image
 
 CharField.register_lookup(Length)
@@ -241,6 +240,7 @@ class Recipe(Model):
         image = Image.open(self.image.path)
         image = image.resize(IMAGE_SIZE)
         image.save(self.image.path)
+
 
 class AmountIngredient(Model):
     """Количество ингридиентов в блюде.
