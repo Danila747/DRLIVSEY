@@ -18,7 +18,6 @@ Models:
         Рецепты в корзине покупок пользователя.
 """
 from api.conf import MAX_LEN_RECIPES_CHARFIELD, MAX_LEN_RECIPES_TEXTFIELD
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import (CASCADE, CharField, CheckConstraint,
@@ -301,7 +300,7 @@ class Favorite(Model):
         user(int):
             Связаный пользователь. Связь через ForeignKey.
         date_added (datetime):
-            Дата длбавления рецепта в избранное. 
+            Дата длбавления рецепта в избранное.
     """
     recipe = ForeignKey(
         verbose_name='Понравившиеся рецепты',
@@ -346,7 +345,7 @@ class Cart(Model):
         user(int):
             Связаный пользователь. Связь через ForeignKey.
         date_added (datetime):
-            Дата длбавления рецепта в корзину. 
+            Дата длбавления рецепта в корзину.
     """
     recipe = ForeignKey(
         verbose_name='Рецепты в списке покупок',

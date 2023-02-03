@@ -4,7 +4,6 @@
 from string import hexdigits
 
 from recipes.models import AmountIngredient
-
 from rest_framework.serializers import ValidationError
 
 

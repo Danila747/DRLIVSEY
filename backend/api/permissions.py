@@ -1,6 +1,6 @@
+from rest_framework.permissions import DjangoModelPermissions  # noqa F401
+from rest_framework.permissions import IsAuthenticated  # noqa F401
 from rest_framework.permissions import (BasePermission,
-                                        IsAuthenticated,         # noqa F401
-                                        DjangoModelPermissions,  # noqa F401
                                         IsAuthenticatedOrReadOnly)
 
 
@@ -54,4 +54,3 @@ class OwnerUserOrReadOnly(IsAuthenticatedOrReadOnly):
                 )
             )
         )
-

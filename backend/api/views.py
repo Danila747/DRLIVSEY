@@ -5,21 +5,20 @@ from django.contrib.auth import get_user_model
 from django.db.models import F, Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
-
 from djoser.views import UserViewSet as DjoserUserViewSet
-
 from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
-
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.routers import APIRootView
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
+from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
+                                   HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from . import conf
 from .mixins import AddDelViewMixin
 from .paginators import PageLimitPagination
-from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly, IsAuthenticated, DjangoModelPermissions
+from .permissions import (AdminOrReadOnly, AuthorStaffOrReadOnly,
+                          DjangoModelPermissions, IsAuthenticated)
 from .serializers import (IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer,
                           UserSubscribeSerializer)

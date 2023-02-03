@@ -1,6 +1,5 @@
 from django.contrib.admin import ModelAdmin, TabularInline, register, site
 from django.utils.safestring import mark_safe
-
 from recipes.models import (AmountIngredient, Cart, Favorite, Ingredient,
                             Recipe, Tag)
 
@@ -64,7 +63,7 @@ class RecipeAdmin(ModelAdmin):
 
     def count_favorites(self, obj):
         return obj.favorite.count()
-    
+
     count_favorites.short_description = 'В избранном'
 
 
