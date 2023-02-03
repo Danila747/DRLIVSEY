@@ -58,12 +58,12 @@ SYMBOL_FALSE_SEARCH = ('0', 'false',)
 Литералы для выбора менеджера Мany-To-Many
 в эндпоинтах обеспечивающих работу с этими менеджерами.
 """
-# Создание "подписки". <user.subscribe>
-SUBSCRIBE_M2M = 'subscribe'
-# Добавление рецепта в "избранное". <user.favorites>
-FAVORITE_M2M = 'favorite'
-# Добавление рецепта в "список покупок". <user.carts>
-SHOP_CART_M2M = 'shopping_cart'
+# # Создание "подписки". <user.subscribe>
+# SUBSCRIBE_M2M = 'subscribe'
+# # Добавление рецепта в "избранное". <user.favorites>
+# FAVORITE_M2M = 'favorite'
+# # Добавление рецепта в "список покупок". <user.carts>
+# SHOP_CART_M2M = 'shopping_cart'
 
 """
 Настройки ограничений моделей.

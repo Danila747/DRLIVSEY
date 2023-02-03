@@ -6,7 +6,7 @@ from django.db.models import F, Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
-from recipes.models import AmountIngredient, Ingredient, Recipe, Tag
+from recipes.models import AmountIngredient, Ingredient, Recipe, Tag, Favorite, Cart
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.routers import APIRootView
@@ -225,7 +225,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Returns:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
-        return self.add_del_obj(pk, conf.FAVORITE_M2M)
+        return self.add_del_obj(pk, Favorite)
 
     @action(
         methods=conf.ACTION_METHODS,
@@ -245,7 +245,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Returns:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
-        return self.add_del_obj(pk, conf.SHOP_CART_M2M)
+        return self.add_del_obj(pk, Cart)
 
     @action(methods=('get',), detail=False)
     def download_shopping_cart(self, request):

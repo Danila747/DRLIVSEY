@@ -152,20 +152,46 @@ class TagSerializer(ModelSerializer):
         model = Tag
         fields = '__all__'
         read_only_fields = '__all__',
-
-    def validate_color(self, color):
-        """Проверяет и нормализует код цвета.
+    
+    def validate(self, data: dict) -> dict:
+        """Проверка вводных данных при создании/редактировании тэга.
 
         Args:
-            color (str): Строка описывающая код цвета.
+            data (dict): Вводные данные.
+
+        Raises:
+            ValidationError: Тип данных несоответствует ожидаемому.
 
         Returns:
-            str: Проверенная строка описывающая цвет в HEX-формате (#12AB98).
+            data (dict): Проверенные данные.
         """
-        color = str(color).strip(' #')
+        name: str = self.initial_data.get('name').strip().lower()
+        slug: str = self.initial_data.get('slug').strip().lower()
+        color: str = self.initial_data.get('color').sttrip(' #').upper()
         is_hex_color(color)
-        return f'#{color}'
+        tags = Tag.objects.filter(
+            name=name
+        ).filter(
+            slug=slug
+        ).filter(
+            color=color
+        )
 
+        for tag in tags:
+            if tag.name == name:
+                err = 'Не уникальное название'
+            elif tag.slug == slug:
+                err = 'Не уникальный слаг'
+            elif tag.color == color:
+                err = 'Не уникальный цвет'
+            else:
+                 continue
+            raise ValidationError(err)
+
+        data.update({
+            'name': name, 'slug': slug, 'color': color
+        })
+        return data
 
 class IngredientSerializer(ModelSerializer):
     """Сериализатор для вывода ингридиентов.
@@ -259,9 +285,9 @@ class RecipeSerializer(ModelSerializer):
             ValidationError: Тип данных несоответствует ожидаемому.
 
         Returns:
-            dict: Проверенные данные.
+            data (dict): Проверенные данные.
         """
-        name = str(self.initial_data.get('name')).strip()
+        name = self.initial_data.get('name').strip()
         tags = self.initial_data.get('tags')
         ingredients = self.initial_data.get('ingredients')
         values_as_list = (tags, ingredients)

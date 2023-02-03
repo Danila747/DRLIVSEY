@@ -87,7 +87,7 @@ AUTH_USER_MODEL = 'users.MyUser'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME':
-     'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+     'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },  # noqa E501
     {'NAME':
      'django.contrib.auth.password_validation.MinimumLengthValidator', },
     {'NAME':

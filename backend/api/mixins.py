@@ -49,9 +49,7 @@ class AddDelViewMixin:
         )
 
         user = self.request.user
-
         recipe = get_object_or_404(self.queryset, id=recipe_id)
-
         serializer = self.add_serializer(
             recipe, context={'request': self.request}
         )

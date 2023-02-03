@@ -27,9 +27,12 @@ from django.db.models import (CASCADE, CharField, CheckConstraint,
                               UniqueConstraint)
 from django.db.models.functions import Length
 
+from PIL import Image
+
 CharField.register_lookup(Length)
 
 User = get_user_model()
+IMAGE_SIZE = (500, 500)
 
 
 class Tag(Model):
@@ -55,41 +58,34 @@ class Tag(Model):
         verbose_name='Тэг',
         max_length=MAX_LEN_RECIPES_CHARFIELD,
         unique=True,
+        null=False,
     )
     color = CharField(
         verbose_name='Цветовой HEX-код',
         max_length=6,
-        blank=True,
-        null=True,
-        default='FF',
+        unique=True,
+        null=False,
     )
     slug = CharField(
         verbose_name='Слаг тэга',
         max_length=MAX_LEN_RECIPES_CHARFIELD,
         unique=True,
+        null=False
     )
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
         ordering = ('name', )
-        constraints = (
-            CheckConstraint(
-                check=Q(name__length__gt=0),
-                name='\n%(app_label)s_%(class)s_name is empty\n',
-            ),
-            CheckConstraint(
-                check=Q(color__length__gt=0),
-                name='\n%(app_label)s_%(class)s_color is empty\n',
-            ),
-            CheckConstraint(
-                check=Q(slug__length__gt=0),
-                name='\n%(app_label)s_%(class)s_slug is empty\n',
-            ),
-        )
 
     def __str__(self) -> str:
         return f'{self.name} (цвет: {self.color})'
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()
+        self.color = self.color.upper()
+        self.slug = self.slug.lower()
+        super().save(*args, **kwargs)
 
 
 class Ingredient(Model):
@@ -135,6 +131,11 @@ class Ingredient(Model):
 
     def __str__(self) -> str:
         return f'{self.name} {self.measurement_unit}'
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower()
+        self.measurement_unit = self.measurement_unit.lower()
+        super().save(*args, **kwargs)
 
 
 class Recipe(Model):
@@ -234,6 +235,12 @@ class Recipe(Model):
     def __str__(self) -> str:
         return f'{self.name}. Автор: {self.author.username}'
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.capitalize()
+        super().save(*args, **kwargs)
+        image = Image.open(self.image.path)
+        image = image.resize(IMAGE_SIZE)
+        image.save(self.image.path)
 
 class AmountIngredient(Model):
     """Количество ингридиентов в блюде.
