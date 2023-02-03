@@ -2,8 +2,7 @@ from pathlib import Path
 
 from decouple import Csv, config
 
-# Eсли true то будет использована прилагаемая база SQLite c записанными данными
-REVIEW = 0
+DATE_TIME_FORMAT = '%d/%m/%Y %H:%M'
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
@@ -129,19 +128,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
-
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / MEDIA_URL
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 PASSWORD_RESET_TIMEOUT = 60 * 60  # 1 hour
-
-# for review
-if REVIEW:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': str(BASE_DIR / 'db.sqlite3'),
-        }
-    }

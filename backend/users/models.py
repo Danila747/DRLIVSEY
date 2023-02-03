@@ -4,7 +4,8 @@
 приложения `Foodgram`. Модель пользователя основана на модели
 AbstractUser из Django для переопределения полей обязательных для заполнения.
 """
-from core import conf
+from core import texsts
+from core.enums import Limits
 from django.contrib.auth.models import AbstractUser
 from django.db.models import (BooleanField, CharField, CheckConstraint,
                               EmailField, ManyToManyField, Q)
@@ -48,34 +49,34 @@ class MyUser(AbstractUser):
     """
     email = EmailField(
         verbose_name='Адрес электронной почты',
-        max_length=conf.MAX_LEN_EMAIL_FIELD,
+        max_length=Limits.MAX_LEN_EMAIL_FIELD.value,
         unique=True,
-        help_text=conf.USERS_HELP_EMAIL
+        help_text=texsts.USERS_HELP_EMAIL
     )
     username = CharField(
         verbose_name='Уникальный юзернейм',
-        max_length=conf.MAX_LEN_USERS_CHARFIELD,
+        max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
         unique=True,
-        help_text=(conf.USERS_HELP_UNAME),
+        help_text=(texsts.USERS_HELP_UNAME),
         validators=(
-            MinLenValidator(min_len=conf.MIN_USERNAME_LENGTH),
+            MinLenValidator(min_len=Limits.MIN_LEN_USERNAME),
             OneOfTwoValidator(),
         ),
     )
     first_name = CharField(
         verbose_name='Имя',
-        max_length=conf.MAX_LEN_USERS_CHARFIELD,
-        help_text=conf.USERS_HELP_FNAME
+        max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
+        help_text=texsts.USERS_HELP_FNAME
     )
     last_name = CharField(
         verbose_name='Фамилия',
-        max_length=conf.MAX_LEN_USERS_CHARFIELD,
-        help_text=conf.USERS_HELP_FNAME
+        max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
+        help_text=texsts.USERS_HELP_FNAME
     )
     password = CharField(
         verbose_name=_('Пароль'),
-        max_length=conf.MAX_LEN_USERS_CHARFIELD,
-        help_text=conf.USERS_HELP_FNAME
+        max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
+        help_text=texsts.USERS_HELP_FNAME
     )
     active = BooleanField(
         verbose_name=' Активирован',
@@ -94,10 +95,10 @@ class MyUser(AbstractUser):
         ordering = ('username',)
         constraints = (
             CheckConstraint(
-                check=Q(username__length__gte=conf.MIN_USERNAME_LENGTH),
+                check=Q(username__length__gte=Limits.MIN_LEN_USERNAME.value),
                 name='\nusername too short\n',
             ),
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.username}: {self.email}'

@@ -1,5 +1,6 @@
 from django.contrib.admin import ModelAdmin, TabularInline, register, site
-from django.utils.safestring import mark_safe
+from django.core.handlers.wsgi import WSGIRequest
+from django.utils.safestring import SafeString, mark_safe
 from recipes.models import (AmountIngredient, Cart, Favorite, Ingredient,
                             Recipe, Tag)
 
@@ -56,12 +57,12 @@ class RecipeAdmin(ModelAdmin):
     save_on_top = True
     empty_value_display = EMPTY_VALUE_DISPLAY
 
-    def get_image(self, obj):
+    def get_image(self, obj: Recipe) -> SafeString:
         return mark_safe(f'<img src={obj.image.url} width="80" hieght="30"')
 
     get_image.short_description = 'Изображение'
 
-    def count_favorites(self, obj):
+    def count_favorites(self, obj: Recipe) -> int:
         return obj.favorite.count()
 
     count_favorites.short_description = 'В избранном'
@@ -89,10 +90,18 @@ class FavoriteAdmin(ModelAdmin):
         'user__username', 'recipe__name'
     )
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(
+        self,
+        request: WSGIRequest,
+        obj: Favorite | None = None
+    ) -> bool:
         return False
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(
+        self,
+        request: WSGIRequest,
+        obj: Favorite | None = None
+    ) -> bool:
         return False
 
 
@@ -105,8 +114,16 @@ class CardAdmin(ModelAdmin):
         'user__username', 'recipe__name'
     )
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(
+        self,
+        request: WSGIRequest,
+        obj: Cart | None = None
+    ) -> bool:
         return False
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(
+        self,
+        request: WSGIRequest,
+        obj: Cart | None = None
+    ) -> bool:
         return False

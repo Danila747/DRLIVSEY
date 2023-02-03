@@ -1,7 +1,6 @@
 from datetime import datetime as dt
 from urllib.parse import unquote
 
-# from backend.
 from api.mixins import AddDelViewMixin
 from api.paginators import PageLimitPagination
 from api.permissions import (AdminOrReadOnly, AuthorStaffOrReadOnly,
@@ -9,13 +8,16 @@ from api.permissions import (AdminOrReadOnly, AuthorStaffOrReadOnly,
 from api.serializers import (IngredientSerializer, RecipeSerializer,
                              ShortRecipeSerializer, TagSerializer,
                              UserSubscribeSerializer)
-from core import conf
+from core.enums import Tuples, UrlQueries
 from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
-from django.db.models import F, Sum
+from django.core.handlers.wsgi import WSGIRequest
+from django.db.models import F, QuerySet, Sum
+from django.db.models.manager import BaseManager
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
+from foodgram.settings import DATE_TIME_FORMAT
 from recipes.models import (AmountIngredient, Cart, Favorite, Ingredient,
                             Recipe, Tag)
 from rest_framework.decorators import action
@@ -24,8 +26,9 @@ from rest_framework.routers import APIRootView
 from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
                                    HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from users.models import MyUser
 
-User = get_user_model()
+User: MyUser = get_user_model()
 
 
 class BaseAPIRootView(APIRootView):
@@ -46,18 +49,18 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
     permission_classes = (DjangoModelPermissions,)
 
     @action(
-        methods=conf.ACTION_METHODS,
+        methods=Tuples.ACTION_METHODS,
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, id):
+    def subscribe(self, request: WSGIRequest, id: int) -> Response:
         """Создаёт/удалет связь между пользователями.
 
         Вызов метода через url: */user/<int:id>/subscribe/.
 
         Args:
-            request (Request): Не используется.
-            id (int, str):
+            request (WSGIRequest): Не используется.
+            id (int):
                 id пользователя, на которого желает подписаться
                 или отписаться запрашивающий пользователь.
 
@@ -66,28 +69,28 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         """
         user = self.request.user
         author = get_object_or_404(self.queryset, id=id)
-        serializer = self.add_serializer(
+        serializer: UserSubscribeSerializer = self.add_serializer(
             author, context={'request': self.request}
         )
-        subscribe_exist = user.subscribe.filter(id=id).exists()
+        subscribe_exist: bool = user.subscribe.filter(id=id).exists()
 
-        if (self.request.method in conf.ADD_METHODS) and not subscribe_exist:
+        if (self.request.method in Tuples.ADD_METHODS) and not subscribe_exist:
             user.subscribe.add(author)
             return Response(serializer.data, status=HTTP_201_CREATED)
 
-        if (self.request.method in conf.DEL_METHODS) and subscribe_exist:
+        if (self.request.method in Tuples.DEL_METHODS) and subscribe_exist:
             user.subscribe.remove(author)
             return Response(status=HTTP_204_NO_CONTENT)
         return Response(status=HTTP_400_BAD_REQUEST)
 
     @action(methods=('get',), detail=False)
-    def subscriptions(self, request):
+    def subscriptions(self, request: WSGIRequest) -> Response:
         """Список подписок пользоваетеля.
 
         Вызов метода через url: */user/<int:id>/subscribtions/.
 
         Args:
-            request (Request): Не используется.
+            request (WSGIRequest): Не используется.
 
         Returns:
             Responce:
@@ -97,7 +100,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         user = self.request.user
         if user.is_anonymous:
             return Response(status=HTTP_401_UNAUTHORIZED)
-        authors = user.subscribe.all()
+        authors: BaseManager[MyUser] = user.subscribe.all()
         pages = self.paginate_queryset(authors)
         serializer = UserSubscribeSerializer(
             pages, many=True, context={'request': request}
@@ -124,7 +127,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (AdminOrReadOnly,)
 
-    def get_queryset(self):
+    def get_queryset(self) -> list[Ingredient]:
         """Получает queryset в соответствии с параметрами запроса.
 
         Реализован поиск объектов по совпадению в начале названия,
@@ -135,11 +138,9 @@ class IngredientViewSet(ReadOnlyModelViewSet):
         так как все ингридиенты в базе записаны в нижнем регистре.
 
         Returns:
-            QuerySet: Список запрошенных объектов.
-
-        TODO: `exclude` in queryset.
+            list[Ingredient]: Список запрошенных объектов.
         """
-        name = self.request.query_params.get(conf.SEARCH_ING_NAME)
+        name: str = self.request.query_params.get(UrlQueries.SEARCH_ING_NAME)
         queryset = self.queryset
         if name:
             if name[0] == '%':
@@ -147,12 +148,13 @@ class IngredientViewSet(ReadOnlyModelViewSet):
             else:
                 name = name.translate(incorrect_layout)
             name = name.lower()
-            stw_queryset = list(queryset.filter(name__istartswith=name))
-            cnt_queryset = queryset.filter(name__icontains=name)
-            stw_queryset.extend(
-                [i for i in cnt_queryset if i not in stw_queryset]
+            start_queryset = list(queryset.filter(name__istartswith=name))
+            ingridients_set = set(start_queryset)
+            cont_queryset = queryset.filter(name__icontains=name)
+            start_queryset.extend(
+                [ing for ing in cont_queryset if ing not in ingridients_set]
             )
-            queryset = stw_queryset
+            queryset = start_queryset
         return queryset
 
 
@@ -172,55 +174,53 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
     pagination_class = PageLimitPagination
     add_serializer = ShortRecipeSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Recipe]:
         """Получает queryset в соответствии с параметрами запроса.
 
         Returns:
-            QuerySet: Список запрошенных объектов.
+            QuerySet[Recipe]: Список запрошенных объектов.
         """
         queryset = self.queryset
 
-        tags = self.request.query_params.getlist(conf.TAGS)
+        tags: list = self.request.query_params.getlist(UrlQueries.TAGS.value)
         if tags:
             queryset = queryset.filter(
                 tags__slug__in=tags).distinct()
 
-        author = self.request.query_params.get(conf.AUTHOR)
+        author: str = self.request.query_params.get(UrlQueries.AUTHOR.value)
         if author:
             queryset = queryset.filter(author=author)
 
         # Следующие фильтры только для авторизованного пользователя
-        user = self.request.user
-        if user.is_anonymous:
+        if self.request.user.is_anonymous:
             return queryset
 
-        is_in_shopping = self.request.query_params.get(conf.SHOP_CART)
-        if is_in_shopping in conf.SYMBOL_TRUE_SEARCH:
-            queryset = queryset.filter(cart=user.id)
-        elif is_in_shopping in conf.SYMBOL_FALSE_SEARCH:
-            queryset = queryset.exclude(cart=user.id)
+        is_in_cart: str = self.request.query_params.get(UrlQueries.SHOP_CART)
+        if is_in_cart in Tuples.SYMBOL_TRUE_SEARCH.value:
+            queryset = queryset.filter(cart__user=self.request.user)
+        elif is_in_cart in Tuples.SYMBOL_FALSE_SEARCH.value:
+            queryset = queryset.exclude(cart__user=self.request.user)
 
-        is_favorited = self.request.query_params.get(conf.FAVORITE)
-        if is_favorited in conf.SYMBOL_TRUE_SEARCH:
-            queryset = queryset.filter(favorite=user.id)
-        if is_favorited in conf.SYMBOL_FALSE_SEARCH:
-            queryset = queryset.exclude(favorite=user.id)
-
+        is_favorit: str = self.request.query_params.get(UrlQueries.FAVORITE)
+        if is_favorit in Tuples.SYMBOL_TRUE_SEARCH.value:
+            queryset = queryset.filter(favorite__user=self.request.user)
+        if is_favorit in Tuples.SYMBOL_FALSE_SEARCH.value:
+            queryset = queryset.exclude(favorite__user=self.request.user)
         return queryset
 
     @action(
-        methods=conf.ACTION_METHODS,
+        methods=Tuples.ACTION_METHODS,
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
-    def favorite(self, request, pk):
+    def favorite(self, request: WSGIRequest, pk: int) -> Response:
         """Добавляет/удалет рецепт в `избранное`.
 
         Вызов метода через url: */recipe/<int:pk>/favorite/.
 
         Args:
-            request (Request): Не используется.
-            pk (int, str):
+            request (WSGIRequest): Не используется.
+            pk (int):
                 id рецепта, который нужно добавить/удалить из `избранного`.
 
         Returns:
@@ -229,18 +229,18 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         return self.add_del_obj(pk, Favorite)
 
     @action(
-        methods=conf.ACTION_METHODS,
+        methods=Tuples.ACTION_METHODS,
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
-    def shopping_cart(self, request, pk):
+    def shopping_cart(self, request: WSGIRequest, pk: int) -> Response:
         """Добавляет/удалет рецепт в `список покупок`.
 
         Вызов метода через url: *//recipe/<int:pk>/shopping_cart/.
 
         Args:
-            request (Request): Не используется.
-            pk (int, str):
+            request (WSGIRequest): Не используется.
+            pk (int):
                 id рецепта, который нужно добавить/удалить в `корзину покупок`.
 
         Returns:
@@ -249,7 +249,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         return self.add_del_obj(pk, Cart)
 
     @action(methods=('get',), detail=False)
-    def download_shopping_cart(self, request):
+    def download_shopping_cart(self, request: WSGIRequest) -> Response:
         """Загружает файл *.txt со списком покупок.
 
         Считает сумму ингредиентов в рецептах выбранных для покупки.
@@ -257,7 +257,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Вызов метода через url:  */recipe/<int:id>/download_shopping_cart/.
 
         Args:
-            request (Request): Не используется.
+            request (WSGIRequest): Не используется.
 
         Returns:
             Responce: Ответ с текстовым файлом.
@@ -275,7 +275,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         filename = f'{user.username}_shopping_list.txt'
         shopping_list = (
             f'Список покупок для:\n\n{user.first_name}\n\n'
-            f'{dt.now().strftime(conf.DATE_TIME_FORMAT)}\n\n'
+            f'{dt.now().strftime(DATE_TIME_FORMAT)}\n\n'
         )
         for ing in ingredients:
             shopping_list += (
