@@ -97,6 +97,12 @@ class MyUser(AbstractUser):
 
     def __str__(self) -> str:
         return f'{self.username}: {self.email}'
+    
+    def save(self, *args, **kwargs) -> None:
+        self.username = self.username.capitalize()
+        self.first_name = self.first_name.title()
+        self.last_name = self.last_name.title()
+        super().save(*args, **kwargs)
 
 
 class Subscriptions(Model):
