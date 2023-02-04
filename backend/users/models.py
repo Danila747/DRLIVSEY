@@ -45,8 +45,6 @@ class MyUser(AbstractUser):
             Установлено ограничение по максимальной длине.
         is_active (bool):
             Активен или заблокирован пользователь.
-        subscribe(int):
-            Ссылки на id связанных пользователей.
     """
     email = EmailField(
         verbose_name='Адрес электронной почты',
