@@ -1,7 +1,7 @@
 from django.contrib.admin import ModelAdmin, TabularInline, register, site
 from django.core.handlers.wsgi import WSGIRequest
 from django.utils.safestring import SafeString, mark_safe
-from recipes.models import (AmountIngredient, Cart, Favorite, Ingredient,
+from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
                             Recipe, Tag)
 
 site.site_header = 'Администрирование Foodgram'
@@ -63,7 +63,7 @@ class RecipeAdmin(ModelAdmin):
     get_image.short_description = 'Изображение'
 
     def count_favorites(self, obj: Recipe) -> int:
-        return obj.favorite.count()
+        return obj.in_favorites.count()
 
     count_favorites.short_description = 'В избранном'
 
@@ -81,7 +81,7 @@ class TagAdmin(ModelAdmin):
     empty_value_display = EMPTY_VALUE_DISPLAY
 
 
-@register(Favorite)
+@register(Favorites)
 class FavoriteAdmin(ModelAdmin):
     list_display = (
         'user', 'recipe', 'date_added'
@@ -93,19 +93,19 @@ class FavoriteAdmin(ModelAdmin):
     def has_change_permission(
         self,
         request: WSGIRequest,
-        obj: Favorite | None = None
+        obj: Favorites | None = None
     ) -> bool:
         return False
 
     def has_delete_permission(
         self,
         request: WSGIRequest,
-        obj: Favorite | None = None
+        obj: Favorites | None = None
     ) -> bool:
         return False
 
 
-@register(Cart)
+@register(Carts)
 class CardAdmin(ModelAdmin):
     list_display = (
         'user', 'recipe', 'date_added'
@@ -117,13 +117,13 @@ class CardAdmin(ModelAdmin):
     def has_change_permission(
         self,
         request: WSGIRequest,
-        obj: Cart | None = None
+        obj: Carts | None = None
     ) -> bool:
         return False
 
     def has_delete_permission(
         self,
         request: WSGIRequest,
-        obj: Cart | None = None
+        obj: Carts | None = None
     ) -> bool:
         return False

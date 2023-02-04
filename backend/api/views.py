@@ -12,13 +12,13 @@ from core.enums import Tuples, UrlQueries
 from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import F, QuerySet, Sum
+from django.db.models import F, QuerySet, Sum, Q
 from django.db.models.manager import BaseManager
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
 from foodgram.settings import DATE_TIME_FORMAT
-from recipes.models import (AmountIngredient, Cart, Favorite, Ingredient,
+from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
                             Recipe, Tag)
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -26,7 +26,7 @@ from rest_framework.routers import APIRootView
 from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
                                    HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from users.models import MyUser
+from users.models import MyUser, Subscriptions
 
 User: MyUser = get_user_model()
 
@@ -53,7 +53,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request: WSGIRequest, id: int) -> Response:
+    def subscribe(self, request: WSGIRequest, id: int | str) -> Response:
         """Создаёт/удалет связь между пользователями.
 
         Вызов метода через url: */user/<int:id>/subscribe/.
@@ -67,21 +67,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         Returns:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
-        user = self.request.user
-        author = get_object_or_404(self.queryset, id=id)
-        serializer: UserSubscribeSerializer = self.add_serializer(
-            author, context={'request': self.request}
-        )
-        subscribe_exist: bool = user.subscribe.filter(id=id).exists()
-
-        if (self.request.method in Tuples.ADD_METHODS) and not subscribe_exist:
-            user.subscribe.add(author)
-            return Response(serializer.data, status=HTTP_201_CREATED)
-
-        if (self.request.method in Tuples.DEL_METHODS) and subscribe_exist:
-            user.subscribe.remove(author)
-            return Response(status=HTTP_204_NO_CONTENT)
-        return Response(status=HTTP_400_BAD_REQUEST)
+        return self._add_del_obj(id, Subscriptions, Q(author__id=id))
 
     @action(methods=('get',), detail=False)
     def subscriptions(self, request: WSGIRequest) -> Response:
@@ -100,8 +86,10 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         user = self.request.user
         if user.is_anonymous:
             return Response(status=HTTP_401_UNAUTHORIZED)
-        authors: BaseManager[MyUser] = user.subscribe.all()
-        pages = self.paginate_queryset(authors)
+
+        pages = self.paginate_queryset(
+            User.objects.filter(subscribers__user=user)
+        )
         serializer = UserSubscribeSerializer(
             pages, many=True, context={'request': request}
         )
@@ -197,15 +185,15 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
 
         is_in_cart: str = self.request.query_params.get(UrlQueries.SHOP_CART)
         if is_in_cart in Tuples.SYMBOL_TRUE_SEARCH.value:
-            queryset = queryset.filter(cart__user=self.request.user)
+            queryset = queryset.filter(in_carts__user=self.request.user)
         elif is_in_cart in Tuples.SYMBOL_FALSE_SEARCH.value:
-            queryset = queryset.exclude(cart__user=self.request.user)
+            queryset = queryset.exclude(in_carts__user=self.request.user)
 
         is_favorit: str = self.request.query_params.get(UrlQueries.FAVORITE)
         if is_favorit in Tuples.SYMBOL_TRUE_SEARCH.value:
-            queryset = queryset.filter(favorite__user=self.request.user)
+            queryset = queryset.filter(in_favorites__user=self.request.user)
         if is_favorit in Tuples.SYMBOL_FALSE_SEARCH.value:
-            queryset = queryset.exclude(favorite__user=self.request.user)
+            queryset = queryset.exclude(in_favorites__user=self.request.user)
         return queryset
 
     @action(
@@ -213,7 +201,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
-    def favorite(self, request: WSGIRequest, pk: int) -> Response:
+    def favorite(self, request: WSGIRequest, pk: int | str) -> Response:
         """Добавляет/удалет рецепт в `избранное`.
 
         Вызов метода через url: */recipe/<int:pk>/favorite/.
@@ -226,14 +214,14 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Returns:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
-        return self.add_del_obj(pk, Favorite)
+        return self._add_del_obj(pk, Favorites, Q(recipe__id=pk))
 
     @action(
         methods=Tuples.ACTION_METHODS,
         detail=True,
         permission_classes=(IsAuthenticated,)
     )
-    def shopping_cart(self, request: WSGIRequest, pk: int) -> Response:
+    def shopping_cart(self, request: WSGIRequest, pk: int | str) -> Response:
         """Добавляет/удалет рецепт в `список покупок`.
 
         Вызов метода через url: *//recipe/<int:pk>/shopping_cart/.
@@ -246,7 +234,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Returns:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
-        return self.add_del_obj(pk, Cart)
+        return self._add_del_obj(pk, Carts, Q(recipe__id=pk))
 
     @action(methods=('get',), detail=False)
     def download_shopping_cart(self, request: WSGIRequest) -> Response:
@@ -263,10 +251,10 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
             Responce: Ответ с текстовым файлом.
         """
         user = self.request.user
-        if not user.carts.exists():
+        if not user.in_carts.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
         ingredients = AmountIngredient.objects.filter(
-            recipe__in=(user.carts.values('id'))
+            recipe__in=(user.in_carts.values('id'))
         ).values(
             ingredient=F('ingredients__name'),
             measure=F('ingredients__measurement_unit')

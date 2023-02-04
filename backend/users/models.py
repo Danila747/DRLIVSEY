@@ -7,8 +7,8 @@ AbstractUser из Django для переопределения полей обя
 from core import texsts
 from core.enums import Limits
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (BooleanField, CharField, CheckConstraint,
-                              EmailField, ManyToManyField, Q)
+from django.db.models import (BooleanField, CharField, CheckConstraint, CASCADE, DateTimeField, UniqueConstraint,
+                              EmailField, ManyToManyField, Q, Model, ForeignKey, F)
 from django.db.models.functions import Length
 from django.utils.translation import gettext_lazy as _
 from users.validators import MinLenValidator, OneOfTwoValidator
@@ -82,12 +82,6 @@ class MyUser(AbstractUser):
         verbose_name=' Активирован',
         default=True
     )
-    subscribe = ManyToManyField(
-        verbose_name='Подписка',
-        related_name='subscribers',
-        to='self',
-        symmetrical=False,
-    )
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -102,3 +96,50 @@ class MyUser(AbstractUser):
 
     def __str__(self) -> str:
         return f'{self.username}: {self.email}'
+
+
+class Subscriptions(Model):
+    """Подписки пользователей друг на друга.
+
+    Attributes:
+        author(int):
+            Автор рецепта. Связь через ForeignKey.
+        user(int):
+            Подписчик Связь через ForeignKey.
+        date_added(datetime):
+            Дата создания подписки.
+    """
+    author = ForeignKey(
+        verbose_name='Автор рецепта',
+        related_name='subscribers',
+        to=MyUser,
+        on_delete=CASCADE,
+    )
+    user = ForeignKey(
+        verbose_name='Подписчики',
+        related_name='subscriptions',
+        to=MyUser,
+        on_delete=CASCADE,
+    )
+    date_added = DateTimeField(
+        verbose_name='Дата создания подписки',
+        auto_now_add=True,
+        editable=False
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = (
+            UniqueConstraint(
+                fields=('author', 'user'),
+                name='\nRepeat subscription\n',
+            ),
+            CheckConstraint(
+                check=~Q(author=F('user')),
+                name='\nNo self sibscription\n'
+            )
+        )
+
+    def __str__(self) -> str:
+        return f'{self.user.username} -> {self.author.username}'

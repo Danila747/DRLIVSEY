@@ -298,7 +298,7 @@ class AmountIngredient(Model):
         return f'{self.amount} {self.ingredients}'
 
 
-class Favorite(Model):
+class Favorites(Model):
     """Избранные рецепты.
 
     Модель связывает Recipe и  User.
@@ -308,12 +308,12 @@ class Favorite(Model):
             Связаный рецепт. Связь через ForeignKey.
         user(int):
             Связаный пользователь. Связь через ForeignKey.
-        date_added (datetime):
-            Дата длбавления рецепта в избранное.
+        date_added(datetime):
+            Дата дбавления рецепта в избранное.
     """
     recipe = ForeignKey(
         verbose_name='Понравившиеся рецепты',
-        related_name='favorite',
+        related_name='in_favorites',
         to=Recipe,
         on_delete=CASCADE,
     )
@@ -343,7 +343,7 @@ class Favorite(Model):
         return f'{self.user} -> {self.recipe}'
 
 
-class Cart(Model):
+class Carts(Model):
     """Рецепты в корзине покупок.
 
     Модель связывает Recipe и  User.
@@ -353,12 +353,12 @@ class Cart(Model):
             Связаный рецепт. Связь через ForeignKey.
         user(int):
             Связаный пользователь. Связь через ForeignKey.
-        date_added (datetime):
-            Дата длбавления рецепта в корзину.
+        date_added(datetime):
+            Дата добавления рецепта в корзину.
     """
     recipe = ForeignKey(
         verbose_name='Рецепты в списке покупок',
-        related_name='cart',
+        related_name='in_carts',
         to=Recipe,
         on_delete=CASCADE,
     )
