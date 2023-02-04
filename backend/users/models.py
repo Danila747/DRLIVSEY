@@ -43,7 +43,7 @@ class MyUser(AbstractUser):
             `соли` settings.SECRET_KEY.
             Хранится в зашифрованном виде.
             Установлено ограничение по максимальной длине.
-        active (bool):
+        is_active (bool):
             Активен или заблокирован пользователь.
         subscribe(int):
             Ссылки на id связанных пользователей.
@@ -79,7 +79,7 @@ class MyUser(AbstractUser):
         max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
         help_text=texsts.USERS_HELP_FNAME
     )
-    active = BooleanField(
+    is_active = BooleanField(
         verbose_name=' Активирован',
         default=True
     )

@@ -19,8 +19,8 @@ services:
 
   backend:
     container_name: app
-    image: xewus/foodgram_back:latest
-    # build: ../backend
+    # image: xewus/foodgram_back:latest
+    build: ../backend
     restart: always
     command: >
       bash -c "python manage.py migrate &&
@@ -39,8 +39,8 @@ services:
     image: nginx:1.23.3-alpine
     restart: always
     ports:
-      - 8001:80
-      # - 80:80
+      # - 8001:80
+      - 80:80
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/

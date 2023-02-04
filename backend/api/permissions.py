@@ -1,13 +1,39 @@
 from django.core.handlers.wsgi import WSGIRequest
+from django.db.models import Model
 from rest_framework.permissions import DjangoModelPermissions  # noqa F401
-from rest_framework.permissions import IsAuthenticated  # noqa F401
-from rest_framework.permissions import (BasePermission,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import IsAuthenticated         # noqa F401
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 from rest_framework.routers import APIRootView
-from users.models import MyUser
 
 
-class AuthorStaffOrReadOnly(IsAuthenticatedOrReadOnly):
+class BanPermission(BasePermission):
+    """Базовый класс разрешений с проверкой - забанен ли пользователь.
+    """
+    def has_permission(
+        self,
+        request: WSGIRequest,
+        view: APIRootView
+    ) -> bool:
+        return bool(
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.is_active
+        )
+
+    def has_object_permission(
+        self,
+        request: WSGIRequest,
+        view: APIRootView,
+        obj: Model
+    ) -> bool:
+        return bool(
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.is_active
+        )
+
+
+class AuthorStaffOrReadOnly(BanPermission):
     """
     Разрешение на изменение только для служебного персонала и автора.
     Остальным только чтение объекта.
@@ -16,20 +42,18 @@ class AuthorStaffOrReadOnly(IsAuthenticatedOrReadOnly):
         self,
         request: WSGIRequest,
         view: APIRootView,
-        obj: MyUser
+        obj: Model
     ) -> bool:
         return (
-            request.method == 'GET'
+            request.method in SAFE_METHODS
             or request.user.is_authenticated
-            and request.user.active
-            and (
-                request.user == obj.author
-                or request.user.is_staff
-            )
+            and request.user.is_active
+            and request.user == obj.author
+            or request.user.is_staff
         )
 
 
-class AdminOrReadOnly(BasePermission):
+class AdminOrReadOnly(BanPermission):
     """
     Разрешение на создание и изменение только для админов.
     Остальным только чтение объекта.
@@ -40,16 +64,14 @@ class AdminOrReadOnly(BasePermission):
         view: APIRootView
     ) -> bool:
         return (
-            request.method == 'GET'
-            or (
-                request.user.is_authenticated
-                and request.user.active
-                and request.user.is_admin
-            )
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.is_active
+            and request.user.is_staff
         )
 
 
-class OwnerUserOrReadOnly(IsAuthenticatedOrReadOnly):
+class OwnerUserOrReadOnly(BanPermission):
     """
     Разрешение на изменение только для админа и пользователя.
     Остальным только чтение объекта.
@@ -58,16 +80,14 @@ class OwnerUserOrReadOnly(IsAuthenticatedOrReadOnly):
         self,
         request: WSGIRequest,
         view: APIRootView,
-        obj: MyUser
+        obj: Model
     ) -> bool:
         return (
-            request.method == 'GET'
-            or (
-                request.user.is_authenticated
-                and request.user.active
-                and (
-                    request.user == obj
-                    or request.user.is_admin
-                )
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.is_active
+            and (
+                request.user == obj.author
+                or request.user.is_staff
             )
         )
