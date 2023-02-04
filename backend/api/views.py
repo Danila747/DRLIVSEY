@@ -12,10 +12,8 @@ from core.enums import Tuples, UrlQueries
 from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import F, QuerySet, Sum, Q
-from django.db.models.manager import BaseManager
+from django.db.models import F, Q, QuerySet, Sum
 from django.http.response import HttpResponse
-from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
 from foodgram.settings import DATE_TIME_FORMAT
 from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
@@ -23,8 +21,7 @@ from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.routers import APIRootView
-from rest_framework.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
-                                   HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED)
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import MyUser, Subscriptions
 

@@ -7,8 +7,9 @@ AbstractUser из Django для переопределения полей обя
 from core import texsts
 from core.enums import Limits
 from django.contrib.auth.models import AbstractUser
-from django.db.models import (BooleanField, CharField, CheckConstraint, CASCADE, DateTimeField, UniqueConstraint,
-                              EmailField, ManyToManyField, Q, Model, ForeignKey, F)
+from django.db.models import (CASCADE, BooleanField, CharField,
+                              CheckConstraint, DateTimeField, EmailField, F,
+                              ForeignKey, Model, Q, UniqueConstraint)
 from django.db.models.functions import Length
 from django.utils.translation import gettext_lazy as _
 from users.validators import MinLenValidator, OneOfTwoValidator

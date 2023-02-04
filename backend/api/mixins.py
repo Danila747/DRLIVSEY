@@ -57,7 +57,7 @@ class AddDelViewMixin:
         m2m_obj = m2m_model.objects.filter(q & Q(user=self.request.user.id))
 
         if (self.request.method in Tuples.ADD_METHODS) and not m2m_obj:
-            # Table must have: | m2m.id | obj.id(FK) | user.id(FK) | ... | 
+            # Table must have: | m2m.id | obj.id(FK) | user.id(FK) | ... |
             m2m_model(None, obj.id, self.request.user.id).save()
             return Response(serializer.data, status=HTTP_201_CREATED)
 
