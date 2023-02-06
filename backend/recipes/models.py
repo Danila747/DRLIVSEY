@@ -18,20 +18,21 @@ Models:
         Рецепты в корзине покупок пользователя.
 """
 from core.enums import Limits, Tuples
+from core.validators import hex_color_validator, OneOfTwoValidator
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db.models import (CASCADE, CharField, CheckConstraint,
+from django.db.models import (CASCADE, SET_NULL, CharField, CheckConstraint,
                               DateTimeField, ForeignKey, ImageField,
                               ManyToManyField, Model,
                               PositiveSmallIntegerField, Q, TextField,
                               UniqueConstraint)
 from django.db.models.functions import Length
 from PIL import Image
-from users.models import MyUser
+
 
 CharField.register_lookup(Length)
 
-User: MyUser = get_user_model()
+User = get_user_model()
 
 
 class Tag(Model):
@@ -56,12 +57,13 @@ class Tag(Model):
     name = CharField(
         verbose_name='Тэг',
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
+        validators=(OneOfTwoValidator(field='Название тэга'),),
         unique=True,
         null=False,
     )
     color = CharField(
         verbose_name='Цветовой HEX-код',
-        max_length=6,
+        max_length=7,
         unique=True,
         null=False,
     )
@@ -80,11 +82,11 @@ class Tag(Model):
     def __str__(self) -> str:
         return f'{self.name} (цвет: {self.color})'
 
-    def save(self, *args, **kwargs) -> None:
-        self.name = self.name.lower()
-        self.color = self.color.upper()
-        self.slug = self.slug.lower()
-        super().save(*args, **kwargs)
+    def clean(self) -> None:
+        self.name = self.name.strip().lower()
+        self.slug = self.slug.strip().lower()
+        self.color = hex_color_validator(self.color)
+        return super().clean()
 
 
 class Ingredient(Model):
@@ -176,7 +178,8 @@ class Recipe(Model):
         verbose_name='Автор рецепта',
         related_name='recipes',
         to=User,
-        on_delete=CASCADE,
+        on_delete=SET_NULL,
+        null=True,
     )
     tags = ManyToManyField(
         verbose_name='Тег',

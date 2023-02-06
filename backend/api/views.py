@@ -23,9 +23,9 @@ from rest_framework.response import Response
 from rest_framework.routers import APIRootView
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from users.models import MyUser, Subscriptions
+from users.models import Subscriptions
 
-User: MyUser = get_user_model()
+User = get_user_model()
 
 
 class BaseAPIRootView(APIRootView):

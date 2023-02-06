@@ -1,16 +1,17 @@
 from collections import OrderedDict
 
-from core.enums import Limits
-from core.services import is_hex_color, recipe_amount_ingredients_set
+from core.services import recipe_amount_ingredients_set
+from core.validators import (OneOfTwoValidator, hex_color_validator,
+                             ingredients_validator)
 from django.contrib.auth import get_user_model
-from django.db.models import F, QuerySet
+from django.db.models import F, Q, QuerySet
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, Tag
 from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
                                         ValidationError)
-from users.models import MyUser
+from rest_framework.response import Response
 
-User: MyUser = get_user_model()
+User = get_user_model()
 
 
 class ShortRecipeSerializer(ModelSerializer):
@@ -42,7 +43,7 @@ class UserSerializer(ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
         read_only_fields = 'is_subscribed',
 
-    def get_is_subscribed(self, obj: MyUser) -> bool:
+    def get_is_subscribed(self, obj: User) -> bool:
         """Проверка подписки пользователей.
 
         Определяет - подписан ли текущий пользователь
@@ -59,7 +60,7 @@ class UserSerializer(ModelSerializer):
             return False
         return user.subscriptions.filter(author=obj).exists()
 
-    def create(self, validated_data: dict) -> MyUser:
+    def create(self, validated_data: dict) -> User:
         """ Создаёт нового пользователя с запрошенными полями.
 
         Args:
@@ -77,31 +78,6 @@ class UserSerializer(ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-    def validate_username(self, username: str) -> str:
-        """Проверяет введённый юзернейм.
-
-        Args:
-            username (str): Введёный пользователем юзернейм.
-
-        Raises:
-            ValidationError: Некорректная длина юзернейма.
-            ValidationError: Юзернейм содержит не только буквы.
-
-        Returns:
-            str: Юзернейм.
-        """
-        if len(username) < Limits.MIN_LEN_USERNAME:
-            raise ValidationError(
-                'Длина username допустима от '
-                f'{Limits.MIN_LEN_USERNAME} до '
-                f'{Limits.MAX_LEN_USERS_CHARFIELD}'
-            )
-        if not username.isalpha():
-            raise ValidationError(
-                'В username допустимы только буквы.'
-            )
-        return username.capitalize()
 
 
 class UserSubscribeSerializer(UserSerializer):
@@ -135,7 +111,7 @@ class UserSubscribeSerializer(UserSerializer):
         """
         return True
 
-    def get_recipes_count(self, obj: MyUser) -> int:
+    def get_recipes_count(self, obj: User) -> int:
         """ Показывает общее количество рецептов у каждого автора.
 
         Args:
@@ -167,28 +143,16 @@ class TagSerializer(ModelSerializer):
         Returns:
             data (dict): Проверенные данные.
         """
-        name: str = self.initial_data.get('name').strip().lower()
-        slug: str = self.initial_data.get('slug').strip().lower()
-        color: str = self.initial_data.get('color').sttrip(' #').upper()
-        is_hex_color(color)
-        tags = Tag.objects.filter(
-            name=name
-        ).filter(
-            slug=slug
-        ).filter(
-            color=color
-        )
+        name: str = self.initial_data.get('name', '').strip().lower()
+        slug: str = self.initial_data.get('slug', '').strip().lower()
+        color: str = self.initial_data.get('color', '').sttrip(' #').upper()
+        hex_color_validator(color)
+        OneOfTwoValidator()(name)
 
-        for tag in tags:
-            if tag.name == name:
-                err = 'Не уникальное название'
-            elif tag.slug == slug:
-                err = 'Не уникальный слаг'
-            elif tag.color == color:
-                err = 'Не уникальный цвет'
-            else:
-                continue
-            raise ValidationError(err)
+        if Tag.objects.filter(
+            Q(name=name) | Q(slug=slug) | Q(color=color)
+        ).exists():
+            raise ValidationError('Тэг с такими данными занят.')
 
         data.update({
             'name': name, 'slug': slug, 'color': color
@@ -258,7 +222,7 @@ class RecipeSerializer(ModelSerializer):
             bool: True - если рецепт в `избранном`
             у запращивающего пользователя, иначе - False.
         """
-        user: MyUser = self.context.get('request').user
+        user = self.context.get('request').user
         if user.is_anonymous:
             return False
         return user.favorites.filter(recipe=recipe).exists()
@@ -273,7 +237,7 @@ class RecipeSerializer(ModelSerializer):
             bool: True - если рецепт в `списке покупок`
             у запращивающего пользователя, иначе - False.
         """
-        user: MyUser = self.context.get('request').user
+        user = self.context.get('request').user
         if user.is_anonymous:
             return False
         return user.carts.filter(recipe=recipe).exists()
@@ -293,21 +257,23 @@ class RecipeSerializer(ModelSerializer):
         name: str = self.initial_data.get('name').strip()
         tag_ids: list[int] = self.initial_data.get('tags')
         ingredients: list[dict] = self.initial_data.get('ingredients')
-        tags_base = Tag.objects.filter(id__in=tag_ids)
+        exists_tags = Tag.objects.filter(id__in=tag_ids)
 
-        if len(tags_base) != len(tag_ids):
-            raise ValidationError('Несуществующий тэг')
+        if len(exists_tags) != len(tag_ids):
+            raise ValidationError('Указан несуществующий тэг')
+        
+        ingredients = ingredients_validator(ingredients, Ingredient)
 
-        for idx, ing in enumerate(ingredients):
-            ingredients[idx]['amount'] = int(ingredients[idx]['amount'])
-            if ingredients[idx]['amount'] < 1:
-                raise ValidationError('Неправильно количество ингидиента')
+        # for idx, ing in enumerate(ingredients):
+        #     ingredients[idx]['amount'] = int(ingredients[idx]['amount'])
+        #     if ingredients[idx]['amount'] < 1:
+        #         raise ValidationError('Неправильно количество ингидиента')
 
-            ingredient = Ingredient.objects.filter(id=ing.pop('id', 0))
-            if not ingredient:
-                raise ValidationError('Ингридент не существует')
+        #     ingredient = Ingredient.objects.filter(id=ing.pop('id', 0))
+        #     if not ingredient:
+        #         raise ValidationError('Ингридент не существует')
 
-            ingredients[idx]['ingredient'] = ingredient[0]
+        #     ingredients[idx]['ingredient'] = ingredient[0]
 
         data.update({
             'name': name.capitalize(),

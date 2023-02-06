@@ -1,9 +1,6 @@
 """Модуль вспомогательных функций.
 """
-from string import hexdigits
-
 from recipes.models import AmountIngredient, Recipe
-from rest_framework.serializers import ValidationError
 
 
 def recipe_amount_ingredients_set(
@@ -26,29 +23,6 @@ def recipe_amount_ingredients_set(
             recipe=recipe,
             ingredients=ingredient['ingredient'],
             amount=ingredient['amount']
-        )
-
-
-def is_hex_color(value: str) -> None:
-    """Проверяет - может ли значение быть шестнадцатеричным цветом.
-
-    Args:
-        value (str):
-            Значение переданное для проверки.
-
-    Raises:
-        ValidationError:
-            Переданное значение не корректной длины.
-        ValidationError:
-            Символы значения выходят за пределы 16-ричной системы.
-    """
-    if len(value) not in (3, 6):
-        raise ValidationError(
-            f'{value} не правильной длины ({len(value)}).'
-        )
-    if not set(value).issubset(hexdigits):
-        raise ValidationError(
-            f'{value} не шестнадцатиричное.'
         )
 
 

@@ -20,15 +20,15 @@ class Tuples(tuple, Enum):
 
 class Limits(IntEnum):
     # Максимальная длина email (User)
-    MAX_LEN_EMAIL_FIELD = 254
+    MAX_LEN_EMAIL_FIELD = 256
     # Максимальная длина строковых полей моделей в приложении "users"
-    MAX_LEN_USERS_CHARFIELD = 150
+    MAX_LEN_USERS_CHARFIELD = 32
     # Минимальная длина юзернейма (User)
     MIN_LEN_USERNAME = 3
     # Максимальная длина строковых полей моделей в приложении "recipes"
-    MAX_LEN_RECIPES_CHARFIELD = 200
+    MAX_LEN_RECIPES_CHARFIELD = 64
     # Максимальная длина единицы измеренияs моделей в приложении "recipes"
-    MAX_LEN_MEASUREMENT = 20
+    MAX_LEN_MEASUREMENT = 256
     # Максимальная длина текстовых полей моделей в приложении "recipes"
     MAX_LEN_RECIPES_TEXTFIELD = 5000
     # Минимальное время приготовления рецепта в минутах
@@ -38,7 +38,7 @@ class Limits(IntEnum):
     # Минимальное количество ингридиентов для рецепта
     MIN_AMOUNT_INGREDIENTS = 1
     # Максимальное количество ингридиентов для рецепта
-    MAX_AMOUNT_INGREDIENTS = 10_000
+    MAX_AMOUNT_INGREDIENTS = 32
 
 
 class UrlQueries(str, Enum):
