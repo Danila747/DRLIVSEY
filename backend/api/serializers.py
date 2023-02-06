@@ -4,6 +4,7 @@ from core.services import recipe_amount_ingredients_set
 from core.validators import (ingredients_exist_validator,
                              tag_field_free_validator, tags_exist_validator)
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db.models import F, QuerySet
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, Tag
@@ -249,6 +250,9 @@ class RecipeSerializer(ModelSerializer):
         name: str = self.initial_data.get('name').strip()
         tags_ids: list[int] = self.initial_data.get('tags')
         ingredients: list[dict] = self.initial_data.get('ingredients')
+
+        if not tags_ids or not ingredients:
+            raise ValidationError('Недостаточно данных.')
         tags_exist_validator(tags_ids, Tag)
         ingredients = ingredients_exist_validator(ingredients, Ingredient)
 

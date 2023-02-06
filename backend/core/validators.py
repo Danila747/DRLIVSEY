@@ -23,13 +23,13 @@ class OneOfTwoValidator:
     строка может быть только из латинских или только из русских букв.
 
     Attrs:
-        first_regex(str):
+        first_regex (str):
             Первый вариант допустимого регулярного выражения для сравнения
             со значением. По умолчанию - только русские буквы.
-        second_regex(str):
+        second_regex (str):
             Второй вариант допустимого регулярного выражения для сравнения
             со значением. По умолчанию - только латинские буквы.
-        field(str):
+        field (str):
             Название проверяемого поля.
 
         Raises:
@@ -136,7 +136,7 @@ def hex_color_validator(color: str) -> str:
 def tag_field_free_validator(
     name: str, slug: str, color: str, Tag: 'Tag'
 ) -> None:
-    """Проверяет, занято ли уже какое либо поле из переданных.
+    """Проверяет, занято ли уже какое либо поле тэга из переданных.
 
     Args:
         name (str): Название тэга.
@@ -157,7 +157,7 @@ def tags_exist_validator(tags_ids: list[int | str], Tag: 'Tag') -> None:
     """Проверяет наличие тэгов с указанными id.
 
     Args:
-        tags_ids (list[int  |  str]): Список id.
+        tags_ids (list[int | str]): Список id.
         Tag (Tag): Модель тэгов во избежании цикличного импорта.
 
     Raises:
@@ -186,7 +186,7 @@ def ingredients_exist_validator(
         ValidationError: Ошибка в переданном списке.
 
     Returns:
-        list[dict[str, str | int]]: Проверенный список.
+        list[dict[str, int | Ingridient]]: Проверенный список.
         Example: [{'amount': 5, 'ingredient': <Ingredient: шалфей г>},]
     """
     ings_ids = [None] * len(ingredients)
