@@ -49,14 +49,16 @@ class UserSerializer(ModelSerializer):
         на просматриваемого пользователя.
 
         Args:
-            obj (MyUser): Пользователь, на которого проверяется подписка.
+            obj (User): Пользователь, на которого проверяется подписка.
 
         Returns:
             bool: True, если подписка есть. Во всех остальных случаях False.
         """
         user = self.context.get('request').user
+
         if user.is_anonymous or (user == obj):
             return False
+
         return user.subscriptions.filter(author=obj).exists()
 
     def create(self, validated_data: dict) -> User:
@@ -66,7 +68,7 @@ class UserSerializer(ModelSerializer):
             validated_data (dict): Полученные проверенные данные.
 
         Returns:
-            MyUser: Созданный пользователь.
+            User: Созданный пользователь.
         """
         user = User(
             email=validated_data['email'],
@@ -114,7 +116,7 @@ class UserSubscribeSerializer(UserSerializer):
         """ Показывает общее количество рецептов у каждого автора.
 
         Args:
-            obj (MyUser): Запрошенный пользователь.
+            obj (User): Запрошенный пользователь.
 
         Returns:
             int: Количество рецептов созданных запрошенным пользователем.
@@ -134,13 +136,13 @@ class TagSerializer(ModelSerializer):
         """Проверка вводных данных при создании/редактировании тэга.
 
         Args:
-            data (dict): Вводные данные.
+            data (OrderedDict): Вводные данные.
 
         Raises:
             ValidationError: Тип данных несоответствует ожидаемому.
 
         Returns:
-            data (dict): Проверенные данные.
+            data (OrderedDict): Проверенные данные.
         """
         name: str = self.initial_data.get('name', '').strip().lower()
         slug: str = self.initial_data.get('slug', '').strip().lower()
@@ -216,8 +218,10 @@ class RecipeSerializer(ModelSerializer):
             у запращивающего пользователя, иначе - False.
         """
         user = self.context.get('request').user
+
         if user.is_anonymous:
             return False
+
         return user.favorites.filter(recipe=recipe).exists()
 
     def get_is_in_shopping_cart(self, recipe: Recipe) -> bool:
@@ -231,8 +235,10 @@ class RecipeSerializer(ModelSerializer):
             у запращивающего пользователя, иначе - False.
         """
         user = self.context.get('request').user
+
         if user.is_anonymous:
             return False
+
         return user.carts.filter(recipe=recipe).exists()
 
     def validate(self, data: OrderedDict) -> OrderedDict:
@@ -253,6 +259,7 @@ class RecipeSerializer(ModelSerializer):
 
         if not tags_ids or not ingredients:
             raise ValidationError('Недостаточно данных.')
+
         tags_exist_validator(tags_ids, Tag)
         ingredients = ingredients_exist_validator(ingredients, Ingredient)
 

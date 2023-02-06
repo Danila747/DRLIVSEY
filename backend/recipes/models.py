@@ -65,18 +65,20 @@ class Tag(Model):
         max_length=7,
         unique=True,
         null=False,
+        db_index=False,
     )
     slug = CharField(
         verbose_name='Слаг тэга',
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
         unique=True,
-        null=False
+        null=False,
+        db_index=False,
     )
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
-        ordering = ('name', )
+        ordering = ('name',)
 
     def __str__(self) -> str:
         return f'{self.name} (цвет: {self.color})'
@@ -104,10 +106,12 @@ class Ingredient(Model):
     name = CharField(
         verbose_name='Ингридиент',
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
+        unique=True,
+        null=False,
     )
     measurement_unit = CharField(
         verbose_name='Единицы измерения',
-        max_length=Limits.MAX_LEN_MEASUREMENT.value,
+        max_length=24,
     )
 
     class Meta:
@@ -132,10 +136,10 @@ class Ingredient(Model):
     def __str__(self) -> str:
         return f'{self.name} {self.measurement_unit}'
 
-    def save(self, *args, **kwargs) -> None:
+    def clean(self) -> None:
         self.name = self.name.lower()
         self.measurement_unit = self.measurement_unit.lower()
-        super().save(*args, **kwargs)
+        super().clean()
 
 
 class Recipe(Model):
@@ -194,6 +198,7 @@ class Recipe(Model):
     pub_date = DateTimeField(
         verbose_name='Дата публикации',
         auto_now_add=True,
+        editable=False,
     )
     image = ImageField(
         verbose_name='Изображение блюда',
@@ -209,11 +214,11 @@ class Recipe(Model):
         validators=(
             MinValueValidator(
                 Limits.MIN_COOKING_TIME.value,
-                'Ваше блюдо уже готово!'
+                'Ваше блюдо уже готово!',
             ),
             MaxValueValidator(
                 Limits.MAX_COOKING_TIME.value,
-                'Очень долго ждать...'
+                'Очень долго ждать...',
             ),
         ),
     )
@@ -225,7 +230,7 @@ class Recipe(Model):
         constraints = (
             UniqueConstraint(
                 fields=('name', 'author'),
-                name='unique_for_author'
+                name='unique_for_author',
             ),
             CheckConstraint(
                 check=Q(name__length__gt=0),
@@ -236,8 +241,11 @@ class Recipe(Model):
     def __str__(self) -> str:
         return f'{self.name}. Автор: {self.author.username}'
 
-    def save(self, *args, **kwargs) -> None:
+    def clean(self) -> None:
         self.name = self.name.capitalize()
+        return super().clean()
+
+    def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
         image = Image.open(self.image.path)
         image = image.resize(Tuples.RECIPE_IMAGE_SIZE)
@@ -276,11 +284,11 @@ class AmountIngredient(Model):
         validators=(
             MinValueValidator(
                 Limits.MIN_AMOUNT_INGREDIENTS,
-                'Нужно хоть какое-то количество.'
+                'Нужно хоть какое-то количество.',
             ),
             MaxValueValidator(
                 Limits.MAX_AMOUNT_INGREDIENTS,
-                'Слишком много!'
+                'Слишком много!',
             ),
         ),
     )

@@ -40,11 +40,11 @@ class AddDelViewMixin:
         """Добавляет/удаляет связь M2M между пользователем и другим объектом.
 
         Args:
-            obj_id(int | str):
+            obj_id (int | str):
                 `id` объекта, с которым требуется создать/удалить связь.
-            m2m_model(Model):
+            m2m_model (Model):
                 М2M модель управляющая требуемой связью.
-            q(Q):
+            q (Q):
                 Условие фильтрации объектов.
 
         Returns:
@@ -64,4 +64,5 @@ class AddDelViewMixin:
         if (self.request.method in Tuples.DEL_METHODS) and m2m_obj:
             m2m_obj[0].delete()
             return Response(status=HTTP_204_NO_CONTENT)
+
         return Response(status=HTTP_400_BAD_REQUEST)

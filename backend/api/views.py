@@ -56,7 +56,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         Вызов метода через url: */user/<int:id>/subscribe/.
 
         Args:
-            request (WSGIRequest): Не используется.
+            request (WSGIRequest): Объект запроса.
             id (int):
                 id пользователя, на которого желает подписаться
                 или отписаться запрашивающий пользователь.
@@ -73,7 +73,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
         Вызов метода через url: */user/<int:id>/subscribtions/.
 
         Args:
-            request (WSGIRequest): Не используется.
+            request (WSGIRequest): Объект запроса.
 
         Returns:
             Responce:
@@ -81,6 +81,7 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
                 Список подписок для авторизованного пользователя.
         """
         user = self.request.user
+
         if user.is_anonymous:
             return Response(status=HTTP_401_UNAUTHORIZED)
 
@@ -123,15 +124,17 @@ class IngredientViewSet(ReadOnlyModelViewSet):
         так как все ингридиенты в базе записаны в нижнем регистре.
 
         Returns:
-            list[Ingredient]: Список запрошенных объектов.
+            list[Ingredient]: Список найденых ингридиентов.
         """
         name: str = self.request.query_params.get(UrlQueries.SEARCH_ING_NAME)
         queryset = self.queryset
+
         if name:
             if name[0] == '%':
                 name = unquote(name)
             else:
                 name = name.translate(incorrect_layout)
+
             name = name.lower()
             start_queryset = list(queryset.filter(name__istartswith=name))
             ingridients_set = set(start_queryset)
@@ -140,6 +143,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
                 [ing for ing in cont_queryset if ing not in ingridients_set]
             )
             queryset = start_queryset
+
         return queryset
 
 
@@ -204,7 +208,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Вызов метода через url: */recipe/<int:pk>/favorite/.
 
         Args:
-            request (WSGIRequest): Не используется.
+            request (WSGIRequest): Объект запроса.
             pk (int):
                 id рецепта, который нужно добавить/удалить из `избранного`.
 
@@ -221,10 +225,10 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
     def shopping_cart(self, request: WSGIRequest, pk: int | str) -> Response:
         """Добавляет/удалет рецепт в `список покупок`.
 
-        Вызов метода через url: *//recipe/<int:pk>/shopping_cart/.
+        Вызов метода через url: */recipe/<int:pk>/shopping_cart/.
 
         Args:
-            request (WSGIRequest): Не используется.
+            request (WSGIRequest): Объект запроса.
             pk (int):
                 id рецепта, который нужно добавить/удалить в `корзину покупок`.
 
@@ -242,14 +246,16 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         Вызов метода через url:  */recipe/<int:id>/download_shopping_cart/.
 
         Args:
-            request (WSGIRequest): Не используется.
+            request (WSGIRequest): Объект запроса..
 
         Returns:
             Responce: Ответ с текстовым файлом.
         """
         user = self.request.user
+
         if not user.in_carts.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
+
         ingredients = AmountIngredient.objects.filter(
             recipe__in=(user.in_carts.values('id'))
         ).values(
@@ -268,7 +274,6 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
             )
 
         shopping_list += '\n\nПосчитано в Foodgram'
-
         response = HttpResponse(
             shopping_list, content_type='text.txt; charset=utf-8'
         )
