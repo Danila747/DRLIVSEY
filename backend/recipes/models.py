@@ -58,20 +58,17 @@ class Tag(Model):
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
         validators=(OneOfTwoValidator(field='Название тэга'),),
         unique=True,
-        null=False,
     )
     color = CharField(
         verbose_name='Цветовой HEX-код',
         max_length=7,
         unique=True,
-        null=False,
         db_index=False,
     )
     slug = CharField(
         verbose_name='Слаг тэга',
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
         unique=True,
-        null=False,
         db_index=False,
     )
 
@@ -106,8 +103,6 @@ class Ingredient(Model):
     name = CharField(
         verbose_name='Ингридиент',
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
-        unique=True,
-        null=False,
     )
     measurement_unit = CharField(
         verbose_name='Единицы измерения',
