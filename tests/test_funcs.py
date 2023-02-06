@@ -37,7 +37,9 @@ def test_color_correct():
     assert hex_color_validator('aBc') == '#AABBCC'
     assert hex_color_validator('0a2B3c') == '#0A2B3C'
 
+######################################################################
 invalid_colors = ('1', '12', '1234', '1234567', 'a', '12g', '12a12af')
+
 
 @pytest.mark.validators
 @pytest.mark.parametrize('color', invalid_colors)

@@ -54,7 +54,7 @@ class UserSerializer(ModelSerializer):
         Returns:
             bool: True, если подписка есть. Во всех остальных случаях False.
         """
-        user = self.context.get('request').user
+        user = self.context.get('view').request.user
 
         if user.is_anonymous or (user == obj):
             return False
@@ -217,7 +217,7 @@ class RecipeSerializer(ModelSerializer):
             bool: True - если рецепт в `избранном`
             у запращивающего пользователя, иначе - False.
         """
-        user = self.context.get('request').user
+        user = self.context.get('view').request.user
 
         if user.is_anonymous:
             return False
@@ -234,7 +234,7 @@ class RecipeSerializer(ModelSerializer):
             bool: True - если рецепт в `списке покупок`
             у запращивающего пользователя, иначе - False.
         """
-        user = self.context.get('request').user
+        user = self.context.get('view').request.user
 
         if user.is_anonymous:
             return False

@@ -80,17 +80,13 @@ class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
                 401 - для неавторизованного пользователя.
                 Список подписок для авторизованного пользователя.
         """
-        user = self.request.user
-
-        if user.is_anonymous:
+        if self.request.user.is_anonymous:
             return Response(status=HTTP_401_UNAUTHORIZED)
 
         pages = self.paginate_queryset(
-            User.objects.filter(subscribers__user=user)
+            User.objects.filter(subscribers__user=self.request.user)
         )
-        serializer = UserSubscribeSerializer(
-            pages, many=True, context={'request': request}
-        )
+        serializer = UserSubscribeSerializer(pages, many=True)
         return self.get_paginated_response(serializer.data)
 
 

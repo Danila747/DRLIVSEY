@@ -51,9 +51,7 @@ class AddDelViewMixin:
             Responce: Статус подтверждающий/отклоняющий действие.
         """
         obj = get_object_or_404(self.queryset, id=obj_id)
-        serializer: ModelSerializer = self.add_serializer(
-            obj, context={'request': self.request}
-        )
+        serializer: ModelSerializer = self.add_serializer(obj)
         m2m_obj = m2m_model.objects.filter(q & Q(user=self.request.user))
 
         if (self.request.method in Tuples.ADD_METHODS) and not m2m_obj:
