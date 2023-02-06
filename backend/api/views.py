@@ -13,6 +13,7 @@ from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import F, Q, QuerySet, Sum
+from django.db.models.sql.query import RawQuery
 from django.http.response import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from foodgram.settings import DATE_TIME_FORMAT
@@ -249,24 +250,32 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         """
         user = self.request.user
 
-        if not user.in_carts.exists():
+        if not user.carts.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
 
-        ingredients = AmountIngredient.objects.filter(
-            recipe__in=(user.in_carts.values('id'))
-        ).values(
-            ingredient=F('ingredients__name'),
-            measure=F('ingredients__measurement_unit')
-        ).annotate(amount=Sum('amount'))
+        query = Ingredient.objects.raw('''
+        SELECT
+            ing.id,
+            ing.name AS name,
+            SUM(ai.amount) AS amount,
+            ing.measurement_unit AS measurement
+        FROM recipes_ingredient AS ing
+        JOIN recipes_amountingredient AS ai ON ai.ingredients_id=ing.id
+        JOIN recipes_recipe AS rcp ON ai.recipe_id=rcp.id
+        JOIN recipes_carts AS crt ON crt.recipe_id=rcp.id
+        WHERE crt.user_id=%s
+        GROUP BY ing.id, ing.name;
+        ''', (user.id,))
 
         filename = f'{user.username}_shopping_list.txt'
         shopping_list = (
             f'Список покупок для:\n\n{user.first_name}\n\n'
             f'{dt.now().strftime(DATE_TIME_FORMAT)}\n\n'
         )
-        for ing in ingredients:
+
+        for raw in query:
             shopping_list += (
-                f'{ing["ingredient"]}: {ing["amount"]} {ing["measure"]}\n'
+                f'{raw.name}: {raw.amount} {raw.measurement}\n'
             )
 
         shopping_list += '\n\nПосчитано в Foodgram'
