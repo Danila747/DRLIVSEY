@@ -1,15 +1,13 @@
 from collections import OrderedDict
 
 from core.services import recipe_amount_ingredients_set
-from core.validators import (OneOfTwoValidator, hex_color_validator,
-                             ingredients_validator)
+from core.validators import (ingredients_exist_validator,
+                             tag_field_free_validator, tags_exist_validator)
 from django.contrib.auth import get_user_model
-from django.db.models import F, Q, QuerySet
+from django.db.models import F, QuerySet
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, Tag
-from rest_framework.serializers import (ModelSerializer, SerializerMethodField,
-                                        ValidationError)
-from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
 User = get_user_model()
 
@@ -146,13 +144,7 @@ class TagSerializer(ModelSerializer):
         name: str = self.initial_data.get('name', '').strip().lower()
         slug: str = self.initial_data.get('slug', '').strip().lower()
         color: str = self.initial_data.get('color', '').sttrip(' #').upper()
-        hex_color_validator(color)
-        OneOfTwoValidator()(name)
-
-        if Tag.objects.filter(
-            Q(name=name) | Q(slug=slug) | Q(color=color)
-        ).exists():
-            raise ValidationError('Тэг с такими данными занят.')
+        tag_field_free_validator(name, slug, color)
 
         data.update({
             'name': name, 'slug': slug, 'color': color
@@ -255,29 +247,14 @@ class RecipeSerializer(ModelSerializer):
             data (dict): Проверенные данные.
         """
         name: str = self.initial_data.get('name').strip()
-        tag_ids: list[int] = self.initial_data.get('tags')
+        tags_ids: list[int] = self.initial_data.get('tags')
         ingredients: list[dict] = self.initial_data.get('ingredients')
-        exists_tags = Tag.objects.filter(id__in=tag_ids)
-
-        if len(exists_tags) != len(tag_ids):
-            raise ValidationError('Указан несуществующий тэг')
-        
-        ingredients = ingredients_validator(ingredients, Ingredient)
-
-        # for idx, ing in enumerate(ingredients):
-        #     ingredients[idx]['amount'] = int(ingredients[idx]['amount'])
-        #     if ingredients[idx]['amount'] < 1:
-        #         raise ValidationError('Неправильно количество ингидиента')
-
-        #     ingredient = Ingredient.objects.filter(id=ing.pop('id', 0))
-        #     if not ingredient:
-        #         raise ValidationError('Ингридент не существует')
-
-        #     ingredients[idx]['ingredient'] = ingredient[0]
+        tags_exist_validator(tags_ids, Tag)
+        ingredients = ingredients_exist_validator(ingredients, Ingredient)
 
         data.update({
             'name': name.capitalize(),
-            'tags': tag_ids,
+            'tags': tags_ids,
             'ingredients': ingredients,
             'author': self.context.get('request').user
         })

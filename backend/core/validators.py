@@ -2,13 +2,14 @@
 """
 from re import compile
 from string import hexdigits
-from typing  import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.deconstruct import deconstructible
 
 if TYPE_CHECKING:
-    from recipes.models import Ingredient
+    from recipes.models import Ingredient, Tag
 
 
 @deconstructible
@@ -68,12 +69,12 @@ class MinLenValidator:
     """Проверяет минимальную длину значения.
 
     Attrs:
-        min_len(int):
+        min_len (int):
             Минимально разрешённая длина значения.
             По умолчанию - `0`.
-        field: (str):
-            Название проверямого поля. 
-        message(str):
+        field (str):
+            Название проверямого поля.
+        message (str):
             Сообщение, выводимое при передаче слишком короткого значения.
 
     Raises:
@@ -117,7 +118,7 @@ def hex_color_validator(color: str) -> str:
         ValidationError:
             Символы значения выходят за пределы 16-ричной системы.
     """
-    
+
     color = color.strip(' #')
     if len(color) not in (3, 6):
         raise ValidationError(
@@ -132,7 +133,43 @@ def hex_color_validator(color: str) -> str:
     return '#' + color.upper()
 
 
-def ingredients_validator(
+def tag_field_free_validator(
+    name: str, slug: str, color: str, Tag: 'Tag'
+) -> None:
+    """Проверяет, занято ли уже какое либо поле из переданных.
+
+    Args:
+        name (str): Название тэга.
+        slug (str): Слаг тэга.
+        color (str): Цвет тэга.
+        Tag (Tag): Модель тэга во избежании цикличного импорта.
+
+    Raises:
+        ValidationError: Каое-либо из полей занято.
+    """
+    if Tag.objects.filter(
+        Q(name=name) | Q(slug=slug) | Q(color=color)
+    ).exists():
+        raise ValidationError('Тэг с такими данными занят.')
+
+
+def tags_exist_validator(tags_ids: list[int | str], Tag: 'Tag') -> None:
+    """Проверяет наличие тэгов с указанными id.
+
+    Args:
+        tags_ids (list[int  |  str]): Список id.
+        Tag (Tag): Модель тэгов во избежании цикличного импорта.
+
+    Raises:
+        ValidationError: Тэга с одним из указанных id не существует.
+    """
+    exists_tags = Tag.objects.filter(id__in=tags_ids)
+
+    if len(exists_tags) != len(tags_ids):
+        raise ValidationError('Указан несуществующий тэг')
+
+
+def ingredients_exist_validator(
     ingredients: list[dict[str, str | int]],
     Ingredient: 'Ingredient'
 ) -> list[dict[str, Union[int, 'Ingredient']]]:

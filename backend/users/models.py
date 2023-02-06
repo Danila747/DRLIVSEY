@@ -10,7 +10,6 @@ from core import texsts
 from core.enums import Limits
 from core.validators import MinLenValidator, OneOfTwoValidator
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db.models import (CASCADE, BooleanField, CharField,
                               CheckConstraint, DateTimeField, EmailField, F,
                               ForeignKey, Model, Q, UniqueConstraint)
@@ -73,8 +72,8 @@ class MyUser(AbstractUser):
         max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
         help_text=texsts.USERS_HELP_FNAME,
         validators=(OneOfTwoValidator(
-            first_regex = '[^а-яёА-ЯЁ -]+',
-            second_regex = '[^a-zA-Z -]+',
+            first_regex='[^а-яёА-ЯЁ -]+',
+            second_regex='[^a-zA-Z -]+',
             field='Имя'),
         ),
     )
@@ -83,8 +82,8 @@ class MyUser(AbstractUser):
         max_length=Limits.MAX_LEN_USERS_CHARFIELD.value,
         help_text=texsts.USERS_HELP_FNAME,
         validators=(OneOfTwoValidator(
-            first_regex = '[^а-яёА-ЯЁ -]+',
-            second_regex = '[^a-zA-Z -]+',
+            first_regex='[^а-яёА-ЯЁ -]+',
+            second_regex='[^a-zA-Z -]+',
             field='Фамилия'),
         ),
     )
@@ -124,11 +123,11 @@ class MyUser(AbstractUser):
         else:
             email = email_name.lower() + "@" + domain_part.lower()
         return email
-    
+
     @classmethod
     def normalize_username(cls, username: str) -> str:
         return unicodedata.normalize("NFKC", username).capitalize()
-    
+
     def __normalize_human_names(self, name: str) -> str:
         """Нормализует имена и фамилии. Например:
         - Эрих Мария Ремарк
