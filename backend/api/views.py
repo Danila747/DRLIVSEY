@@ -12,13 +12,11 @@ from core.enums import Tuples, UrlQueries
 from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import F, Q, QuerySet, Sum
-from django.db.models.sql.query import RawQuery
+from django.db.models import Q, QuerySet
 from django.http.response import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from foodgram.settings import DATE_TIME_FORMAT
-from recipes.models import (AmountIngredient, Carts, Favorites, Ingredient,
-                            Recipe, Tag)
+from recipes.models import Carts, Favorites, Ingredient, Recipe, Tag
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.routers import APIRootView

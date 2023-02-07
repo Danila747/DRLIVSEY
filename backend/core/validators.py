@@ -5,7 +5,6 @@ from string import hexdigits
 from typing import TYPE_CHECKING, Union
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.utils.deconstruct import deconstructible
 
 if TYPE_CHECKING:
