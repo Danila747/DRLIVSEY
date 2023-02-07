@@ -1,8 +1,7 @@
 from collections import OrderedDict
 
 from core.services import recipe_amount_ingredients_set
-from core.validators import (ingredients_exist_validator,
-                             tag_field_free_validator, tags_exist_validator)
+from core.validators import ingredients_exist_validator, tags_exist_validator
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import F, QuerySet
@@ -133,25 +132,17 @@ class TagSerializer(ModelSerializer):
         read_only_fields = '__all__',
 
     def validate(self, data: OrderedDict) -> OrderedDict:
-        """Проверка вводных данных при создании/редактировании тэга.
+        """Унификация вводных данных при создании/редактировании тэга.
 
         Args:
             data (OrderedDict): Вводные данные.
 
-        Raises:
-            ValidationError: Тип данных несоответствует ожидаемому.
-
         Returns:
             data (OrderedDict): Проверенные данные.
         """
-        name: str = self.initial_data.get('name', '').strip().lower()
-        slug: str = self.initial_data.get('slug', '').strip().lower()
-        color: str = self.initial_data.get('color', '').sttrip(' #').upper()
-        tag_field_free_validator(name, slug, color)
+        for attr, value in data.items():
+            data[attr] = value.sttrip(' #').upper()
 
-        data.update({
-            'name': name, 'slug': slug, 'color': color
-        })
         return data
 
 
@@ -253,7 +244,6 @@ class RecipeSerializer(ModelSerializer):
         Returns:
             data (dict): Проверенные данные.
         """
-        name: str = self.initial_data.get('name').strip()
         tags_ids: list[int] = self.initial_data.get('tags')
         ingredients: list[dict] = self.initial_data.get('ingredients')
 
@@ -264,7 +254,6 @@ class RecipeSerializer(ModelSerializer):
         ingredients = ingredients_exist_validator(ingredients, Ingredient)
 
         data.update({
-            'name': name.capitalize(),
             'tags': tags_ids,
             'ingredients': ingredients,
             'author': self.context.get('request').user

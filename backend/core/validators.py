@@ -133,26 +133,6 @@ def hex_color_validator(color: str) -> str:
     return '#' + color.upper()
 
 
-def tag_field_free_validator(
-    name: str, slug: str, color: str, Tag: 'Tag'
-) -> None:
-    """Проверяет, занято ли уже какое либо поле тэга из переданных.
-
-    Args:
-        name (str): Название тэга.
-        slug (str): Слаг тэга.
-        color (str): Цвет тэга.
-        Tag (Tag): Модель тэга во избежании цикличного импорта.
-
-    Raises:
-        ValidationError: Каое-либо из полей занято.
-    """
-    if Tag.objects.filter(
-        Q(name=name) | Q(slug=slug) | Q(color=color)
-    ).exists():
-        raise ValidationError('Тэг с такими данными занят.')
-
-
 def tags_exist_validator(tags_ids: list[int | str], Tag: 'Tag') -> None:
     """Проверяет наличие тэгов с указанными id.
 
