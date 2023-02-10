@@ -12,7 +12,7 @@ from core.enums import Tuples, UrlQueries
 from core.services import incorrect_layout
 from django.contrib.auth import get_user_model
 from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Q, QuerySet
+from django.db.models import F, Q, QuerySet, Sum
 from django.http.response import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
 from foodgram.settings import DATE_TIME_FORMAT
@@ -238,7 +238,7 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
 
         Считает сумму ингредиентов в рецептах выбранных для покупки.
         Возвращает текстовый файл со списком ингредиентов.
-        Вызов метода через url:  */recipe/<int:id>/download_shopping_cart/.
+        Вызов метода через url:  */recipes/download_shopping_cart/.
 
         Args:
             request (WSGIRequest): Объект запроса..
@@ -247,36 +247,50 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
             Responce: Ответ с текстовым файлом.
         """
         user = self.request.user
-
         if not user.carts.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
 
-        query = Ingredient.objects.raw('''
-        SELECT
-            ing.id,
-            ing.name AS name,
-            SUM(ai.amount) AS amount,
-            ing.measurement_unit AS measurement
-        FROM recipes_ingredient AS ing
-        JOIN recipes_amountingredient AS ai ON ai.ingredients_id=ing.id
-        JOIN recipes_recipe AS rcp ON ai.recipe_id=rcp.id
-        JOIN recipes_carts AS crt ON crt.recipe_id=rcp.id
-        WHERE crt.user_id=%s
-        GROUP BY ing.id, ing.name;
-        ''', (user.id,))
-
         filename = f'{user.username}_shopping_list.txt'
-        shopping_list = (
-            f'Список покупок для:\n\n{user.first_name}\n\n'
-            f'{dt.now().strftime(DATE_TIME_FORMAT)}\n\n'
-        )
+        shopping_list = [
+            f'Список покупок для:\n\n{user.first_name}\n'
+            f'{dt.now().strftime(DATE_TIME_FORMAT)}\n'
+        ]
 
-        for raw in query:
-            shopping_list += (
-                f'{raw.name}: {raw.amount} {raw.measurement}\n'
+        ingredients = Ingredient.objects.filter(
+            recipe__recipe__in_carts__user=user
+        ).values(
+            'name',
+            measurement=F('measurement_unit')
+        ).annotate(amount=Sum('recipe__amount'))
+
+        for ing in ingredients:
+            shopping_list.append(
+                f'{ing["name"]}: {ing["amount"]} {ing["measurement"]}'
             )
 
-        shopping_list += '\n\nПосчитано в Foodgram'
+        # ###########   Пример с использованием сырого SQL   ############ #
+        # ingredients = Ingredient.objects.raw('''                        #
+        # SELECT                                                          #
+        #     ing.id,                                                     #
+        #     ing.name AS name,                                           #
+        #     ing.measurement_unit AS measurement,                        #
+        #     SUM(ai.amount) AS amount                                    #
+        # FROM recipes_ingredient AS ing                                  #
+        # JOIN recipes_amountingredient AS ai ON ai.ingredients_id=ing.id #
+        # JOIN recipes_recipe AS rcp ON ai.recipe_id=rcp.id               #
+        # JOIN recipes_carts AS crt ON crt.recipe_id=rcp.id               #
+        # WHERE crt.user_id=%s                                            #
+        # GROUP BY ing.id, ing.name;                                      #
+        # ''', (user.id,))                                                #
+        #                                                                 #
+        # for ing in ingredients:                                         #
+        #     shopping_list.append(                                       #
+        #         f'{ing.name}: {ing.amount} {ing.measurement}'           #
+        #     )                                                           #
+        ###################################################################
+
+        shopping_list.append('\nПосчитано в Foodgram')
+        shopping_list = '\n'.join(shopping_list)
         response = HttpResponse(
             shopping_list, content_type='text.txt; charset=utf-8'
         )

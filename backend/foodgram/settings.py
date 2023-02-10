@@ -5,6 +5,7 @@ from decouple import Csv, config
 DATE_TIME_FORMAT = '%d/%m/%Y %H:%M'
 
 DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = 1
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,7 +37,7 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
     'users.apps.UsersConfig',
-    'django_extensions',
+    # 'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -70,9 +71,9 @@ DATABASES = {
         'ENGINE': config(
             'DB_ENGINE', default='django.db.backends.postgresql'),
         'NAME': config(
-            'DB_NAME', default='foodgram'),
+            'DB_NAME', default='postgres'),
         'USER': config(
-            'POSTGRES_USER', default='foodgram_user'),
+            'POSTGRES_USER', default='postgres'),
         'PASSWORD': config(
             'POSTGRES_PASSWORD', default='password'),
         'HOST': config(
@@ -134,3 +135,19 @@ MEDIA_ROOT = BASE_DIR / MEDIA_URL
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 PASSWORD_RESET_TIMEOUT = 60 * 60  # 1 hour
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG' if DEBUG else 'ERROR',
+            'handlers': ['console', ],
+        },
+    },
+}

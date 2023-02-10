@@ -152,7 +152,7 @@ class Recipe(Model):
             Название рецепта. Установлены ограничения по длине.
         author(int):
             Автор рецепта. Связан с моделю User через ForeignKey.
-        favorite(int):
+        in_favorites(int):
             Связь M2M с моделью User.
             Создаётся при добавлении пользователем рецепта в `избранное`.
         tags(int):
@@ -160,7 +160,7 @@ class Recipe(Model):
         ingredients(int):
             Связь M2M с моделью Ingredient. Связь создаётся посредством модели
             AmountIngredient с указанием количества ингридиента.
-        cart(int):
+        in_carts(int):
             Связь M2M с моделью User.
             Создаётся при добавлении пользователем рецепта в `покупки`.
         pub_date(datetime):
