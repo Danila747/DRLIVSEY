@@ -53,6 +53,11 @@ class Tag(Model):
         Tag('Завтрак', '01AB89', 'breakfirst')
         Tag('Завтрак', '01AB89', 'zavtrak')
     """
+    COLOR_PALETTE = [
+        ("#FFFFFF", "white", ),
+        ("#000000", "black", ),
+    ]
+
     name = CharField(
         verbose_name='Тэг',
         max_length=Limits.MAX_LEN_RECIPES_CHARFIELD.value,
@@ -60,7 +65,7 @@ class Tag(Model):
         unique=True,
     )
     color = CharField(
-        verbose_name='Цветовой HEX-код',
+        verbose_name='Цвет',
         max_length=7,
         unique=True,
         db_index=False,
